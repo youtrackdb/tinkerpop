@@ -276,6 +276,11 @@ public class TraversalTest {
         }
 
         @Override
+        public GValueManager getGValueManager() {
+            return new GValueManager();
+        }
+
+        @Override
         public List<Step> getSteps() {
             return steps;
         }

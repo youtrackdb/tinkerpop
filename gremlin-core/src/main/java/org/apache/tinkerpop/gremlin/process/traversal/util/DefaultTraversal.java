@@ -20,6 +20,7 @@ package org.apache.tinkerpop.gremlin.process.traversal.util;
 
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.VertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
+import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalSideEffects;
@@ -70,11 +71,13 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
     protected boolean locked = false;
     protected boolean closed = false;
     protected Bytecode bytecode;
+    protected GValueManager gValueManager;
 
     private DefaultTraversal(final Graph graph, final TraversalStrategies traversalStrategies, final Bytecode bytecode) {
         this.graph = graph;
         this.strategies = traversalStrategies;
         this.bytecode = bytecode;
+        this.gValueManager = new GValueManager();
         this.g = null;
     }
 
@@ -103,6 +106,11 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
 
     public Bytecode getBytecode() {
         return this.bytecode;
+    }
+
+    @Override
+    public GValueManager getGValueManager() {
+        return this.gValueManager;
     }
 
     @Override

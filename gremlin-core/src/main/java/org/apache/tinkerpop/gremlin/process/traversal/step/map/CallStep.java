@@ -22,7 +22,10 @@ import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.CallContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.GValueContracting;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
@@ -54,7 +57,7 @@ import static org.apache.tinkerpop.gremlin.structure.service.Service.ServiceCall
  *
  * @author Mike Personick (http://github.com/mikepersonick)
  */
-public final class CallStep<S, E> extends AbstractStep<S, E> implements TraversalParent, AutoCloseable, Configuring {
+public final class CallStep<S, E> extends AbstractStep<S, E> implements TraversalParent, AutoCloseable, Configuring, CallContract<Map<?, ?>>, GValueContracting<CallContract<GValue<Map<?, ?>>>> {
 
     private final boolean isStart;
     private boolean first = true;
@@ -62,7 +65,7 @@ public final class CallStep<S, E> extends AbstractStep<S, E> implements Traversa
     private ServiceCallContext ctx;
     private String serviceName;
     private Service<S, E> service;
-    private Map staticParams;
+    private Map<?, ?> staticParams;
     private Traversal.Admin<S,Map> mapTraversal;
     private Parameters parameters;
 
@@ -100,6 +103,16 @@ public final class CallStep<S, E> extends AbstractStep<S, E> implements Traversa
 
     public String getServiceName() {
         return serviceName;
+    }
+
+    @Override
+    public Map<?, ?> getStaticParams() {
+        return staticParams;
+    }
+
+    @Override
+    public void setStaticParams(Map<?, ?> params) {
+        this.staticParams = staticParams;
     }
 
     @Override
@@ -342,5 +355,16 @@ public final class CallStep<S, E> extends AbstractStep<S, E> implements Traversa
     @Override
     public Parameters getParameters() {
         return this.parameters;
+    }
+
+    @Override
+    public CallContract<GValue<Map<?, ?>>> getGValueContract() {
+        //TODO better type safety?
+        return (CallContract<GValue<Map<?,?>>>) this.traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasGValueContract() {
+        return this.traversal.getGValueManager().isParameterized(this);
     }
 }

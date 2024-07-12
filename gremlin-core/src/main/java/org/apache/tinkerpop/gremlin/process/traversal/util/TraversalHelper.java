@@ -192,6 +192,7 @@ public final class TraversalHelper {
     }
 
     public static <S, E> Step<?, E> insertTraversal(final int insertIndex, final Traversal.Admin<S, E> insertTraversal, final Traversal.Admin<?, ?> traversal) {
+        traversal.getGValueManager().merge(insertTraversal.getGValueManager());
         if (0 == traversal.getSteps().size()) {
             Step currentStep = EmptyStep.instance();
             for (final Step insertStep : insertTraversal.getSteps()) {

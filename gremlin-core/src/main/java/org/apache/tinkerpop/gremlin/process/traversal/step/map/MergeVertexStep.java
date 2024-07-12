@@ -30,6 +30,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.CardinalityValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ConstantTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.MergeElementContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.EventUtil;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -43,14 +45,13 @@ import static java.util.stream.Collectors.toList;
 /**
  * Implementation for the {@code mergeV()} step covering both the start step version and the one used mid-traversal.
  */
-public class MergeVertexStep<S> extends MergeStep<S, Vertex, Map> {
+public class MergeVertexStep<S> extends MergeElementStep<S, Vertex, Map> {
 
     private static final Set allowedTokens = new LinkedHashSet(Arrays.asList(T.id, T.label));
 
     public static void validateMapInput(final Map map, final boolean ignoreTokens) {
-        MergeStep.validate(map, ignoreTokens, allowedTokens, "mergeV");
+        MergeElementStep.validate(map, ignoreTokens, allowedTokens, "mergeV");
     }
-
 
     public MergeVertexStep(final Traversal.Admin traversal, final boolean isStart) {
         super(traversal, isStart);
@@ -195,4 +196,18 @@ public class MergeVertexStep<S> extends MergeStep<S, Vertex, Map> {
         return combinedMap;
     }
 
+    @Override
+    public Map<?, ?> getMergeMap() {
+        throw new UnsupportedOperationException("Cannot access merge map from step"); //TODO::
+    }
+
+    @Override
+    public Map<?, ?> getOnCreateMap() {
+        throw new UnsupportedOperationException("Cannot access onCreate map from step"); //TODO::
+    }
+
+    @Override
+    public Map<?, ?> getOnMatchMap() {
+        throw new UnsupportedOperationException("Cannot access onMatch map from step"); //TODO::
+    }
 }

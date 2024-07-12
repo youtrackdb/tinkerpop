@@ -800,3 +800,12 @@ class MetricsDeserializer(_GraphSONTypeIO):
     @classmethod
     def objectify(cls, d, reader):
         return reader.to_object(d)
+
+
+class EnumSerializer(_GraphSONTypeIO):
+    python_type = Enum
+
+    @classmethod
+    def dictify(cls, enum, _):
+        return GraphSONUtil.typed_value(SymbolUtil.to_camel_case(type(enum).__name__),
+                                        SymbolUtil.to_camel_case(str(enum.name)))

@@ -23,6 +23,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Bypassing;
 import org.apache.tinkerpop.gremlin.process.traversal.step.FilteringBarrier;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.GValueContracting;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.RangeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Ranging;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.util.TraverserSet;
@@ -41,10 +44,10 @@ import java.util.function.BinaryOperator;
  * @author Bob Briody (http://bobbriody.com)
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, Bypassing, FilteringBarrier<TraverserSet<S>> {
+public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, Bypassing, FilteringBarrier<TraverserSet<S>>, RangeContract<Long>, GValueContracting<RangeContract<GValue<Long>>> {
 
     private long low;
-    private final long high;
+    private long high;
     private AtomicLong counter = new AtomicLong(0l);
     private boolean bypass;
 
@@ -103,12 +106,12 @@ public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, 
     }
 
     @Override
-    public long getLowRange() {
+    public Long getLowRange() {
         return this.low;
     }
 
     @Override
-    public long getHighRange() {
+    public Long getHighRange() {
         return this.high;
     }
 
@@ -181,6 +184,17 @@ public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, 
             traverser.setSideEffects(this.getTraversal().getSideEffects());
             this.addStart(traverser);
         });
+    }
+
+    @Override
+    public RangeContract<GValue<Long>> getGValueContract() {
+        //TODO better type safety?
+        return (RangeContract<GValue<Long>>) this.traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasGValueContract() {
+        return this.traversal.getGValueManager().isParameterized(this);
     }
 
     ////////////////

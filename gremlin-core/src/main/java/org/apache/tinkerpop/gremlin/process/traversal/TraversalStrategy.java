@@ -48,6 +48,10 @@ public interface TraversalStrategy<S extends TraversalStrategy> extends Serializ
 
     public void apply(final Traversal.Admin<?, ?> traversal);
 
+    public default void updateGValue(final Traversal.Admin<?, ?> traversal) {
+        traversal.getGValueManager().reset();
+    }
+
     /**
      * The set of strategies that must be executed before this strategy is executed.
      * If there are no ordering requirements, the default implementation returns an empty set.

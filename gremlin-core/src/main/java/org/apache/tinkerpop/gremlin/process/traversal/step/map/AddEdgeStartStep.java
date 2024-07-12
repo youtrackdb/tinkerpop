@@ -24,9 +24,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.TraverserGenerator;
 import org.apache.tinkerpop.gremlin.process.traversal.step.FromToModulating;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Scoping;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Writing;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.AddEdgeContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.GValueContracting;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.CallbackRegistry;
@@ -43,13 +46,15 @@ import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class AddEdgeStartStep extends AbstractStep<Edge, Edge>
-        implements Writing<Event.EdgeAddedEvent>, TraversalParent, Scoping, FromToModulating {
+        implements Writing<Event.EdgeAddedEvent>, TraversalParent, Scoping, FromToModulating,
+        AddEdgeContract<String, Traversal.Admin<?,?>, Object, Object>, GValueContracting<AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<Object>>> {
 
     private static final String FROM = Graph.Hidden.hide("from");
     private static final String TO = Graph.Hidden.hide("to");
@@ -170,4 +175,38 @@ public class AddEdgeStartStep extends AbstractStep<Edge, Edge>
         return clone;
     }
 
+    @Override
+    public String getLabel() {
+        return parameters.get(T.label, ()->"Edge").get(0);
+    }
+
+    @Override
+    public Traversal.Admin<?, ?> getFrom() {
+        return parameters.get(FROM, ()->(Traversal.Admin<?, ?>) null).get(0);
+    }
+
+    @Override
+    public Traversal.Admin<?, ?> getTo() {
+        return parameters.get(TO, ()->(Traversal.Admin<?, ?>) null).get(0);
+    }
+
+    @Override
+    public AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<Object>> getGValueContract() {
+        return (AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<Object>>) traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasGValueContract() {
+        return traversal.getGValueManager().isParameterized(this);
+    }
+
+    @Override
+    public Map<Object, Object> getProperties() {
+        throw new UnsupportedOperationException("TODO:");
+    }
+
+    @Override
+    public void addProperty(Object key, Object value) {
+        configure(key, value);
+    }
 }

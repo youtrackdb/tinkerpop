@@ -20,6 +20,7 @@
 import copy
 import warnings
 from aenum import Enum
+from gremlin_python.structure.graph import Vertex, Edge, Path, Property
 from .. import statics
 from ..statics import long
 
@@ -897,3 +898,38 @@ class WithOptions(object):
 
     map = 1
 
+class GValue:
+    def __init__(self, name, value):
+        if name is None:
+            raise Exception("The parameter name cannot be None.")
+        if name.startswith('_'):
+            raise Exception(f'invalid GValue name {name}. Should not start with _.')
+        self.name = name
+        self.value = value
+
+    def get_name(self):
+        return self.name
+
+    def is_null(self):
+        return self.value is None
+
+    def get(self):
+        return self.value
+
+
+class CardinalityValue(Bytecode):
+    def __init__(self, cardinality, val):
+        super().__init__()
+        self.add_source("CardinalityValueTraversal", cardinality, val)
+
+    @classmethod
+    def single(cls, val):
+        return CardinalityValue(Cardinality.single, val)
+
+    @classmethod
+    def list_(cls, val):
+        return CardinalityValue(Cardinality.list_, val)
+
+    @classmethod
+    def set_(cls, val):
+        return CardinalityValue(Cardinality.set_, val)

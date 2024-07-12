@@ -20,12 +20,15 @@ package org.apache.tinkerpop.gremlin.process.traversal.step.map;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
-import org.apache.tinkerpop.gremlin.process.traversal.Contains;             
+import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GraphComputing;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.ElementIdsContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.GValueContracting;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
@@ -49,7 +52,7 @@ import java.util.function.Supplier;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  * @author Pieter Martin
  */
-public class GraphStep<S, E extends Element> extends AbstractStep<S, E> implements GraphComputing, AutoCloseable, Configuring {
+public class GraphStep<S, E extends Element> extends AbstractStep<S, E> implements GraphComputing, AutoCloseable, Configuring, ElementIdsContract<Object>, GValueContracting<ElementIdsContract<GValue<?>>> { //TODO Raw contract type{
 
     protected Parameters parameters = new Parameters();
     protected final Class<E> returnClass;
@@ -64,6 +67,15 @@ public class GraphStep<S, E extends Element> extends AbstractStep<S, E> implemen
     public GraphStep(final Traversal.Admin traversal, final Class<E> returnClass, final boolean isStart, final Object... ids) {
         super(traversal);
         this.returnClass = returnClass;
+
+        //TODO:: Better Check
+        for (Object id : ids) {
+            if (id instanceof GValue) {
+                throw new IllegalArgumentException("GValue Not Allowed as id in GraphStep");
+            }
+        }
+
+
         this.ids = (ids != null && ids.length == 1 && ids[0] instanceof Collection) ? ((Collection) ids[0]).toArray(new Object[((Collection) ids[0]).size()]) : ids;
         this.isStart = isStart;
         this.iteratorSupplier = () -> (Iterator<E>) (Vertex.class.isAssignableFrom(this.returnClass) ?
@@ -209,5 +221,15 @@ public class GraphStep<S, E extends Element> extends AbstractStep<S, E> implemen
             return true;
         }
         return false;
+    }
+
+    @Override
+    public ElementIdsContract<GValue<?>> getGValueContract() {
+        return (ElementIdsContract<GValue<?>>) this.traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasGValueContract() {
+        return this.traversal.getGValueManager().isParameterized(this);
     }
 }

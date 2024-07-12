@@ -22,9 +22,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.TraverserGenerator;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Scoping;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Writing;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.AddVertexContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.GValueContracting;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.CallbackRegistry;
@@ -38,6 +41,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -45,7 +49,7 @@ import java.util.Set;
  * @author Stephen Mallette (http://stephen.genoprime.com)
  */
 public class AddVertexStartStep extends AbstractStep<Vertex, Vertex>
-        implements Writing<Event.VertexAddedEvent>, TraversalParent, Scoping {
+        implements Writing<Event.VertexAddedEvent>, TraversalParent, Scoping, AddVertexContract<String, Object, Object>, GValueContracting<AddVertexContract<GValue<String>, ?, GValue<?>>> {
 
     private Parameters parameters = new Parameters();
     private boolean first = true;
@@ -151,5 +155,31 @@ public class AddVertexStartStep extends AbstractStep<Vertex, Vertex>
         clone.parameters = this.parameters.clone();
         clone.userProvidedLabel = this.userProvidedLabel;
         return clone;
+    }
+
+
+    @Override
+    public String getLabel() {
+        return parameters.get(T.label, ()->"Edge").get(0);
+    }
+
+    @Override
+    public AddVertexContract<GValue<String>, ?, GValue<?>> getGValueContract() {
+        return (AddVertexContract<GValue<String>, ?, GValue<?>>) traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasGValueContract() {
+        return traversal.getGValueManager().isParameterized(this);
+    }
+
+    @Override
+    public Map<Object, Object> getProperties() {
+        throw new UnsupportedOperationException("TODO:");
+    }
+
+    @Override
+    public void addProperty(Object key, Object value) {
+        configure(key, value);
     }
 }

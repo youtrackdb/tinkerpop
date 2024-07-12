@@ -35,6 +35,14 @@ public abstract class ConnectiveP<V> extends P<V> {
 
     public ConnectiveP(final List<P<V>> predicates) {
         super(null, null);
+
+        for (P<V> p : predicates) {
+            if (p.parameterized) {
+                this.parameterized = true;
+                this.gValueRegistry.merge(p.gValueRegistry);
+            }
+        }
+
         if (predicates.size() < 2)
             throw new IllegalArgumentException("The provided " + this.getClass().getSimpleName() + " array must have at least two arguments: " + predicates.size());
     }

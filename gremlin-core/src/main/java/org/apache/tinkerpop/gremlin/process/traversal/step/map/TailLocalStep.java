@@ -22,6 +22,9 @@ package org.apache.tinkerpop.gremlin.process.traversal.step.map;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.GValueContracting;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.TailContract;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
@@ -34,7 +37,7 @@ import java.util.Set;
 /**
  * @author Matt Frantz (http://github.com/mhfrantz)
  */
-public final class TailLocalStep<S> extends ScalarMapStep<S, S> {
+public final class TailLocalStep<S> extends ScalarMapStep<S, S> implements TailContract<Long>, GValueContracting<TailContract<GValue<Long>>> {
 
     private final long limit;
 
@@ -73,5 +76,21 @@ public final class TailLocalStep<S> extends ScalarMapStep<S, S> {
     @Override
     public Set<TraverserRequirement> getRequirements() {
         return Collections.singleton(TraverserRequirement.OBJECT);
+    }
+
+    @Override
+    public TailContract<GValue<Long>> getGValueContract() {
+        //TODO better type safety?
+        return (TailContract<GValue<Long>>) this.traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasGValueContract() {
+        return this.traversal.getGValueManager().isParameterized(this);
+    }
+
+    @Override
+    public Long getLimit() {
+        return limit;
     }
 }

@@ -150,7 +150,7 @@ public class GenericLiteralVisitor extends DefaultGremlinBaseVisitor<Object> {
         return varargsContext.stringNullableLiteral()
                 .stream()
                 .filter(Objects::nonNull)
-                .map(this::parseString)
+                .map(antlr.genericVisitor::parseString)
                 .toArray(String[]::new);
     }
 
@@ -679,5 +679,19 @@ public class GenericLiteralVisitor extends DefaultGremlinBaseVisitor<Object> {
             return null;
         else
             return StringEscapeUtils.unescapeJava(stripQuotes(ctx.getText()));
+    }
+
+    @Override
+    public Object[] visitStringNullableLiteralVarargs(final GremlinParser.StringNullableLiteralVarargsContext ctx) {
+        if (ctx == null) {
+            return new Object[0];
+        }
+        return ctx.children
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(p -> p instanceof GremlinParser.StringNullableArgumentContext)
+                .map(p -> (GremlinParser.StringNullableArgumentContext) p)
+                .map(antlr.argumentVisitor::visitStringNullableArgument)
+                .toArray(Object[]::new);
     }
 }

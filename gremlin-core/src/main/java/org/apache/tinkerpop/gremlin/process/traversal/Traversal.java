@@ -331,6 +331,11 @@ public interface Traversal<S, E> extends Iterator<E>, Serializable, Cloneable, A
         public Bytecode getBytecode();
 
         /**
+         * Get the {@link GValueManager} associated with this traversal.
+         */
+        public GValueManager getGValueManager();
+
+        /**
          * Add an iterator of {@link Traverser.Admin} objects to the head/start of the traversal. Users should
          * typically not need to call this method. For dynamic inject of data, they should use {@link InjectStep}.
          *

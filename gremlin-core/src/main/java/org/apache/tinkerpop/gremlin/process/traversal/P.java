@@ -18,13 +18,18 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal;
 
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
 import org.apache.tinkerpop.gremlin.process.traversal.util.OrP;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Predefined {@code Predicate} values that can be used to define filters to {@code has()} and {@code where()}.
@@ -38,7 +43,17 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
     protected V value;
     protected V originalValue;
 
-    public P(final PBiPredicate<V, V> biPredicate, final V value) {
+    public boolean parameterized;
+    public GValueRegistry gValueRegistry;
+
+    public P(final PBiPredicate<V, V> biPredicate, V value) {
+        parameterized = value instanceof GValue;
+        if (parameterized) {
+            gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
+            value = ((GValue<V>) value).get();
+        } else {
+            gValueRegistry = new GValueRegistry();
+        }
         this.value = value;
         this.originalValue = value;
         this.biPredicate = biPredicate;
@@ -56,7 +71,7 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
         return originalValue;
     }
 
-    /*
+    /**
      * Get the name of the predicate
      */
     public String getPredicateName() { return biPredicate.getPredicateName(); }
@@ -74,7 +89,12 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
 
     @Override
     public boolean test(final V testValue) {
-        return this.biPredicate.test(testValue, this.value);
+        // this might be a bunch of GValue that need to be resolved. zomg
+        if (this.value instanceof List) {
+            return this.biPredicate.test(testValue, (V) ((List) this.value).stream().map(GValue::valueOf).collect(Collectors.toList()));
+        } else {
+            return this.biPredicate.test(testValue, (V) GValue.valueOf(this.value));
+        }
     }
 
     @Override
@@ -133,6 +153,10 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
      * @since 3.0.0-incubating
      */
     public static <V> P<V> eq(final V value) {
+        return new P(Compare.eq, value);
+    }
+
+    public static <V> P<V> eq(final GValue<V> value) {
         return new P(Compare.eq, value);
     }
 
@@ -215,8 +239,22 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
      * @since 3.0.0-incubating
      */
     public static <V> P<V> within(final V... values) {
-        final V[] v = null == values ? (V[]) new Object[] { null } : values;
+        //TODO:: Handle properly, record GValues
+        Object[] literals = Arrays.stream(values).map(val -> val instanceof GValue ? ((GValue<V>) val).get() : val).toArray();
+
+
+        final V[] v = null == literals ? (V[]) new Object[] { null } : (V[]) literals;
         return P.within(Arrays.asList(v));
+    }
+
+    /**
+     * Determines if a value is within the specified list of values. If the array of arguments itself is {@code null}
+     * then the argument is treated as {@code Object[1]} where that single value is {@code null}.
+     *
+     * @since 3.8.0
+     */
+    public static <V> P<V> within(final GValue<V>... values) {
+        return within((V[])GValue.resolveToValues(values));
     }
 
     /**
@@ -268,5 +306,29 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
      */
     public static <V> P<V> not(final P<V> predicate) {
         return predicate.negate();
+    }
+
+    public boolean isParameterized() {
+        return parameterized;
+    }
+
+    protected class GValueRegistry {
+        private Map<P, GValue> GValueRegistry = new IdentityHashMap<>();
+
+        public GValueRegistry() {};
+
+        public GValueRegistry(P predicate, GValue gValue) {
+            GValueRegistry.put(predicate, gValue);
+        }
+
+        public GValueRegistry(GValueRegistry... registries) {
+            for (final GValueRegistry registry : registries) {
+                this.merge(registry);
+            }
+        }
+
+        public void merge(final GValueRegistry other) {
+            this.GValueRegistry.putAll(other.GValueRegistry);
+        }
     }
 }

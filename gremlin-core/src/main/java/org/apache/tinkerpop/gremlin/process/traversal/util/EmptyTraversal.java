@@ -19,6 +19,7 @@
 package org.apache.tinkerpop.gremlin.process.traversal.util;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
+import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalSideEffects;
@@ -55,6 +56,11 @@ public final class EmptyTraversal<S, E> implements Traversal.Admin<S, E> {
 
     public Bytecode getBytecode() {
         return new Bytecode();
+    }
+
+    @Override
+    public GValueManager getGValueManager() {
+        return new GValueManager();
     }
 
     @Override
