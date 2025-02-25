@@ -25,7 +25,10 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.OrP;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -41,7 +44,17 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
     protected V value;
     protected V originalValue;
 
-    public P(final PBiPredicate<V, V> biPredicate, final V value) {
+    public boolean parameterized;
+    public GValueRegistry gValueRegistry;
+
+    public P(final PBiPredicate<V, V> biPredicate, V value) {
+        parameterized = value instanceof GValue;
+        if (parameterized) {
+            gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
+            value = ((GValue<V>) value).get();
+        } else {
+            gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
+        }
         this.value = value;
         this.originalValue = value;
         this.biPredicate = biPredicate;
@@ -59,7 +72,7 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
         return originalValue;
     }
 
-    /*
+    /**
      * Get the name of the predicate
      */
     public String getPredicateName() { return biPredicate.getPredicateName(); }
@@ -141,6 +154,10 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
      * @since 3.0.0-incubating
      */
     public static <V> P<V> eq(final V value) {
+        return new P(Compare.eq, value);
+    }
+
+    public static <V> P<V> eq(final GValue<V> value) {
         return new P(Compare.eq, value);
     }
 
@@ -276,5 +293,30 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
      */
     public static <V> P<V> not(final P<V> predicate) {
         return predicate.negate();
+    }
+
+    public boolean isParameterized() {
+        return parameterized;
+    }
+
+    protected class GValueRegistry {
+        private Map<Integer, P> PRegistry = new WeakHashMap<>();
+        private Map<Integer, GValue> GValueRegistry = new WeakHashMap<>();
+
+        public GValueRegistry(P predicate, GValue gValue) {
+            PRegistry.put(System.identityHashCode(predicate), predicate);
+            GValueRegistry.put(System.identityHashCode(predicate), gValue);
+        }
+
+        public GValueRegistry(GValueRegistry... registries) {
+            for (final GValueRegistry registry : registries) {
+                this.merge(registry);
+            }
+        }
+
+        public void merge(final GValueRegistry other) {
+            this.PRegistry.putAll(other.PRegistry);
+            this.GValueRegistry.putAll(other.GValueRegistry);
+        }
     }
 }

@@ -193,6 +193,7 @@ public abstract class AbstractStep<S, E> implements Step<S, E> {
             clone.traversal = EmptyTraversal.instance();
             clone.labels = new LinkedHashSet<>(this.labels);
             clone.reset();
+            this.getTraversal().getGValueManager().copyParams(this, clone);
             return clone;
         } catch (final CloneNotSupportedException e) {
             throw new IllegalStateException(e.getMessage(), e);

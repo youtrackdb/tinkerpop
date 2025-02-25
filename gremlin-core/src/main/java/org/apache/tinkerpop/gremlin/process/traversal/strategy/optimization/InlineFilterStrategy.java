@@ -129,7 +129,8 @@ public final class InlineFilterStrategy extends AbstractTraversalStrategy<Traver
             final List<Object> edgeLabels = new ArrayList<>();
             for (final HasContainer hasContainer : new ArrayList<>(step.getHasContainers())) {
                 if (hasContainer.getKey().equals(T.label.getAccessor())) {
-                    if (hasContainer.getBiPredicate() == Compare.eq && GValue.instanceOf(hasContainer.getValue(), GType.STRING) &&
+                    if (hasContainer.getBiPredicate() == Compare.eq &&
+                            hasContainer.getValue() instanceof String &&
                             edgeLabels.isEmpty()) {
                         edgeLabels.add(hasContainer.getValue());
                         step.removeHasContainer(hasContainer);

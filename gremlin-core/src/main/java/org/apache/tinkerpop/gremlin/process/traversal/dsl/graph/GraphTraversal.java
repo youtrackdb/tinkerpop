@@ -372,7 +372,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default <E2> GraphTraversal<S, E2> constant(final GValue<E2> e) {
         this.asAdmin().getGremlinLang().addStep(GraphTraversal.Symbols.constant, e);
-        return this.asAdmin().addStep(new ConstantStep<E, E2>(this.asAdmin(), e));
+        ConstantStep step = new ConstantStep<E, E2>(this.asAdmin(), e.get());
+        this.asAdmin().getGValueManager().register(step, e.get());
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -387,7 +389,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         // a single null is [null]
         final Object[] ids = null == vertexIdsOrElements ? new Object[] { null } : vertexIdsOrElements;
         this.asAdmin().getGremlinLang().addStep(Symbols.V, ids);
-        return this.asAdmin().addStep(new GraphStep<>(this.asAdmin(), Vertex.class, false, ids));
+        GraphStep step = new GraphStep<>(this.asAdmin(), Vertex.class, false, GValue.resolveToValues(GValue.ensureGValues(ids))); //TODO cleanup
+        this.asAdmin().getGValueManager().register(step, vertexIdsOrElements);
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -638,7 +642,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default GraphTraversal<S, Edge> outE(final GValue<String>... edgeLabels) {
         this.asAdmin().getGremlinLang().addStep(GraphTraversal.Symbols.outE, edgeLabels);
-        return this.asAdmin().addStep(new VertexStep<>(this.asAdmin(), Edge.class, Direction.OUT, edgeLabels));
+        VertexStep step = new VertexStep<>(this.asAdmin(), Edge.class, Direction.OUT, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
+        this.asAdmin().getGValueManager().register(step, edgeLabels);
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -3040,9 +3046,16 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @see <a href="http://tinkerpop.apache.org/docs/${project.version}/reference/#is-step" target="_blank">Reference Documentation - Is Step</a>
      * @since 3.0.0-incubating
      */
-    public default GraphTraversal<S, E> is(final P<E> predicate) {
+    public default GraphTraversal<S, E> is(P<E> predicate) {
         this.asAdmin().getGremlinLang().addStep(Symbols.is, predicate);
-        return this.asAdmin().addStep(new IsStep<>(this.asAdmin(), predicate));
+
+        IsStep<E> step = new IsStep<>(this.asAdmin(), predicate);
+
+        if (predicate.isParameterized()) {
+            this.asAdmin().getGValueManager().register(step, predicate);
+        }
+
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -3124,7 +3137,11 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default GraphTraversal<S, E> range(final GValue<Long> low, final GValue<Long> high) {
         this.asAdmin().getGremlinLang().addStep(Symbols.range, low, high);
-        return this.asAdmin().addStep(new RangeGlobalStep<>(this.asAdmin(), low, high));
+
+        RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), low.get(), high.get());
+        this.asAdmin().getGValueManager().register(step, low, high);
+
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -3160,9 +3177,14 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default <E2> GraphTraversal<S, E2> range(final Scope scope, final GValue<Long> low, final GValue<Long> high) {
         this.asAdmin().getGremlinLang().addStep(Symbols.range, scope, low, high);
-        return this.asAdmin().addStep(scope.equals(Scope.global)
-                ? new RangeGlobalStep<>(this.asAdmin(), low, high)
-                : new RangeLocalStep<>(this.asAdmin(), low, high));
+
+        Step<?, E2> step = scope.equals(Scope.global)
+                ? new RangeGlobalStep<>(this.asAdmin(), low.get(), high.get())
+                : new RangeLocalStep<>(this.asAdmin(), low.get(), high.get());
+
+        this.asAdmin().getGValueManager().register(step, low, high);
+
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -3190,7 +3212,12 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default GraphTraversal<S, E> limit(final GValue<Long> limit) {
         this.asAdmin().getGremlinLang().addStep(Symbols.limit, limit);
-        return this.asAdmin().addStep(new RangeGlobalStep<>(this.asAdmin(), GValue.ofLong(null, 0L), limit));
+
+        RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), 0, limit.get());
+
+        this.asAdmin().getGValueManager().register(step, null, limit);
+
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -3222,9 +3249,14 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default <E2> GraphTraversal<S, E2> limit(final Scope scope, final GValue<Long> limit) {
         this.asAdmin().getGremlinLang().addStep(Symbols.limit, scope, limit);
-        return this.asAdmin().addStep(scope.equals(Scope.global)
-                ? new RangeGlobalStep<>(this.asAdmin(), GValue.ofLong(null, 0L), limit)
-                : new RangeLocalStep<>(this.asAdmin(), GValue.ofLong(null, 0L), limit));
+
+        Step<?, E2> step = scope.equals(Scope.global)
+                ? new RangeGlobalStep<>(this.asAdmin(), 0, limit.get())
+                : new RangeLocalStep<>(this.asAdmin(), 0, limit.get());
+
+        this.asAdmin().getGValueManager().register(step, null, limit);
+
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -3341,7 +3373,12 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default GraphTraversal<S, E> skip(final GValue<Long> skip) {
         this.asAdmin().getGremlinLang().addStep(Symbols.skip, skip);
-        return this.asAdmin().addStep(new RangeGlobalStep<>(this.asAdmin(), skip, GValue.ofLong(null, -1L)));
+
+        RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), skip.get(), -1);
+
+        this.asAdmin().getGValueManager().register(step, skip, null);
+
+        return this.asAdmin().addStep(step);
     }
 
     /**
@@ -3371,9 +3408,14 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default <E2> GraphTraversal<S, E2> skip(final Scope scope, final GValue<Long> skip) {
         this.asAdmin().getGremlinLang().addStep(Symbols.skip, scope, skip);
-        return this.asAdmin().addStep(scope.equals(Scope.global)
-                ? new RangeGlobalStep<>(this.asAdmin(), skip, GValue.ofLong(null, -1L))
-                : new RangeLocalStep<>(this.asAdmin(), skip, GValue.ofLong(null, -1L)));
+
+        Step<?, E2> step = scope.equals(Scope.global)
+                ? new RangeGlobalStep<>(this.asAdmin(), skip.get(), -1)
+                : new RangeLocalStep<>(this.asAdmin(), skip.get(), -1);
+
+        this.asAdmin().getGValueManager().register(step, skip, null);
+
+        return this.asAdmin().addStep(step);
     }
 
     /**

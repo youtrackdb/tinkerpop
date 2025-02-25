@@ -30,36 +30,29 @@ import java.util.Set;
 
 public class ConstantStep<S, E> extends ScalarMapStep<S, E> {
 
-    private final GValue<E> constant;
+    private final E constant;
 
     public ConstantStep(final Traversal.Admin traversal, final E constant) {
-        this(traversal, constant instanceof GValue ? (GValue) constant : GValue.of(null, constant));
-    }
-
-    public ConstantStep(final Traversal.Admin traversal, final GValue<E> constant) {
         super(traversal);
-        this.constant = null == constant ? GValue.of(null, null) : constant;
+        this.constant = constant;
     }
 
     public E getConstant() {
-        return this.constant.get();
-    }
-    public GValue<E> getConstantGValue() {
         return this.constant;
     }
 
     @Override
     protected E map(final Traverser.Admin<S> traverser) {
-        return this.constant.get();
+        return this.constant;
     }
 
     @Override
     public String toString() {
-        return StringFactory.stepString(this, this.constant.get());
+        return StringFactory.stepString(this, this.constant);
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode() ^ Objects.hashCode(this.constant.get());
+        return super.hashCode() ^ Objects.hashCode(this.constant);
     }
 }

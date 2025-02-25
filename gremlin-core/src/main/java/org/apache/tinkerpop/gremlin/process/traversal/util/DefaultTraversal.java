@@ -19,6 +19,7 @@
 package org.apache.tinkerpop.gremlin.process.traversal.util;
 
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.VertexProgramStep;
+import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.GremlinLang;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -69,11 +70,13 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
     protected boolean locked = false;
     protected boolean closed = false;
     protected GremlinLang gremlinLang;
+    protected GValueManager gValueManager;
 
     private DefaultTraversal(final Graph graph, final TraversalStrategies traversalStrategies, final GremlinLang gremlinLang) {
         this.graph = graph;
         this.strategies = traversalStrategies;
         this.gremlinLang = gremlinLang;
+        this.gValueManager = new GValueManager();
         this.g = null;
     }
 
@@ -100,8 +103,14 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
         this(EmptyGraph.instance(), TraversalStrategies.GlobalCache.getStrategies(EmptyGraph.class), gremlinLang);
     }
 
+    @Override
     public GremlinLang getGremlinLang() {
         return this.gremlinLang;
+    }
+
+    @Override
+    public GValueManager getGValueManager() {
+        return this.gValueManager;
     }
 
     @Override

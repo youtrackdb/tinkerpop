@@ -43,7 +43,7 @@ image::https://raw.githubusercontent.com/apache/tinkerpop/master/docs/static/ima
 * Renamed the traversal discarding `none()` step to `discard()`.
 * Added new list filtering step `none()`.
 * Replaced `gremlin-groovy` with `gremlin-lang` as the default language in `gremlin-server`.
-* Changed `sum()` to retain the type common to the stream rather than always promoting to `long` given the need for it to multiple by the `long` bulk value for the traverser.
+* Changed `sum()` to retain the type common to the stream rather than always promoting to `long` given the need for it to multiply by the `long` bulk value for the traverser.
 * Added support for `Set` in GraphSON and GraphBinary serialization for `gremlin-javascript`, where it previously just converted to array.
 * Added `Set` syntax in `gremlin-language`.
 * Modified RequestInterceptor to be a `UnaryOperator<HttpRequest>` to abstract the underlying implementation.

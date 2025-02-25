@@ -18,6 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.lambda;
 
+import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.GremlinLang;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
@@ -30,16 +31,23 @@ public final class CardinalityValueTraversal extends AbstractLambdaTraversal {
     private final Object value;
 
     private final GremlinLang gremlinLang;
+    private final GValueManager gValueManager;
 
     public CardinalityValueTraversal(final VertexProperty.Cardinality cardinality, final Object value) {
         this.cardinality = cardinality;
         this.value = value;
         this.gremlinLang = new GremlinLang(CardinalityValueTraversal.class.getSimpleName(), cardinality.name(), value);
+        this.gValueManager = new GValueManager();
     }
 
     @Override
     public GremlinLang getGremlinLang() {
         return this.gremlinLang;
+    }
+
+    @Override
+    public GValueManager getGValueManager() {
+        return this.gValueManager;
     }
 
     public VertexProperty.Cardinality getCardinality() {

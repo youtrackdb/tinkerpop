@@ -325,10 +325,13 @@ public interface Traversal<S, E> extends Iterator<E>, Serializable, Cloneable, A
 
         /**
          * Get the {@link GremlinLang} associated with the construction of this traversal.
-         *
-         * @return the byte code representation of the traversal
          */
         public GremlinLang getGremlinLang();
+
+        /**
+         * Get the {@link GremlinLang} associated with the construction of this traversal.
+         */
+        public GValueManager getGValueManager();
 
         /**
          * Add an iterator of {@link Traverser.Admin} objects to the head/start of the traversal. Users should
