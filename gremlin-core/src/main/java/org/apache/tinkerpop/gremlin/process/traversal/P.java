@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -53,7 +54,7 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
             gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
             value = ((GValue<V>) value).get();
         } else {
-            gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
+            gValueRegistry = new GValueRegistry();
         }
         this.value = value;
         this.originalValue = value;
@@ -300,12 +301,12 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
     }
 
     protected class GValueRegistry {
-        private Map<Integer, P> PRegistry = new WeakHashMap<>();
-        private Map<Integer, GValue> GValueRegistry = new WeakHashMap<>();
+        private Map<P, GValue> GValueRegistry = new IdentityHashMap<>();
+
+        public GValueRegistry() {};
 
         public GValueRegistry(P predicate, GValue gValue) {
-            PRegistry.put(System.identityHashCode(predicate), predicate);
-            GValueRegistry.put(System.identityHashCode(predicate), gValue);
+            GValueRegistry.put(predicate, gValue);
         }
 
         public GValueRegistry(GValueRegistry... registries) {
@@ -315,7 +316,6 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
         }
 
         public void merge(final GValueRegistry other) {
-            this.PRegistry.putAll(other.PRegistry);
             this.GValueRegistry.putAll(other.GValueRegistry);
         }
     }

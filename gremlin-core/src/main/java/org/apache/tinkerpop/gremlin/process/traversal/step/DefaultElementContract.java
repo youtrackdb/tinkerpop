@@ -18,13 +18,15 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step;
 
-/**
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-public interface Ranging {
+public class DefaultElementContract<V> implements ElementContract<V> {
+    private V[] ids;
 
-    public Long getLowRange();
+    public DefaultElementContract(V[] ids) {
+        this.ids = ids;
+    }
 
-    public Long getHighRange();
-
+    @Override
+    public V[] getIds() {
+        return ids;
+    }
 }

@@ -20,7 +20,10 @@ package org.apache.tinkerpop.gremlin.process.traversal.step.map;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
+import org.apache.tinkerpop.gremlin.process.traversal.step.ConstantContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValueContracting;
+import org.apache.tinkerpop.gremlin.process.traversal.step.RangeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
@@ -28,7 +31,7 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
-public class ConstantStep<S, E> extends ScalarMapStep<S, E> {
+public class ConstantStep<S, E> extends ScalarMapStep<S, E> implements ConstantContract<E>, GValueContracting<ConstantContract<GValue<E>>> {
 
     private final E constant;
 
@@ -54,5 +57,15 @@ public class ConstantStep<S, E> extends ScalarMapStep<S, E> {
     @Override
     public int hashCode() {
         return super.hashCode() ^ Objects.hashCode(this.constant);
+    }
+
+    @Override
+    public ConstantContract<GValue<E>> getGValueContract() {
+        return (ConstantContract<GValue<E>>) this.traversal.getGValueManager().getStepContract(this); //TODO type safety?
+    }
+
+    @Override
+    public boolean hasParameterizedContract() {
+        return this.traversal.getGValueManager().isParameterized(this);
     }
 }

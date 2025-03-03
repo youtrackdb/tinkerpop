@@ -18,46 +18,67 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal;
 
+import org.apache.tinkerpop.gremlin.process.traversal.step.ConstantContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.ElementContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.EdgeLabelContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.RangeContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.StepContract;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class GValueManager {
 
-    private Map<String, GValue> gValueRegistry = Collections.synchronizedMap(new IdentityHashMap());
-    private Map<Step, StepRegistration> stepRegistry = Collections.synchronizedMap(new IdentityHashMap());
-    private Map<Step, P> predicateRegistry = Collections.synchronizedMap(new IdentityHashMap());
+    private Map<String, GValue> gValueRegistry = new IdentityHashMap();
+    private Map<Step, StepContract> stepRegistry = new IdentityHashMap();
+    private Map<Step, P> predicateRegistry = new IdentityHashMap();
 
-    public void register(Step step, GValue... gValues) {
-        for (GValue<?> gValue : gValues) {
-            if (gValue != null && gValue.isVariable()) {
-                if (gValueRegistry.containsKey(gValue.getName())) {
-                    //TODO Handle better?
-                    throw new IllegalArgumentException("Cannot register multiple values for " + gValue.getName());
-                }
-                gValueRegistry.put(gValue.getName(), gValue);
-            }
+    /**
+     * Register a step with a GValue RangeContract
+     */
+    public void register(Step step, RangeContract<GValue<Long>> contract) {
+        stepRegistry.put(step, contract);
+        if (contract.getHighRange().getName() != null) {
+            gValueRegistry.put(contract.getHighRange().getName(), contract.getHighRange());
         }
-        stepRegistry.put(step, new StepRegistration(
-                Arrays.stream(gValues).map((GValue gvalue) -> gvalue == null ? null : gvalue.getName()).toArray(String[]::new)
-        ));
+        if (contract.getLowRange().getName() != null) {
+            gValueRegistry.put(contract.getLowRange().getName(), contract.getLowRange());
+        }
     }
 
     /**
-     * Convenience overload for register which handles a mix of GValues and literals.
-     * @param step
-     * @param gValues
+     * Register a step with a GValue ConstantContract
      */
-    public void register(Step step, Object... gValues) {
-        if (gValues == null || gValues.length == 0) {
-            return; //nothing to register
+    public void register(Step step, ConstantContract<GValue> contract) {
+        stepRegistry.put(step, contract);
+        if (contract.getConstant().getName() != null) {
+            gValueRegistry.put(contract.getConstant().getName(), contract.getConstant());
         }
-        register(step, Arrays.stream(gValues).map((arg) -> arg instanceof GValue ? arg : null).toArray(GValue<?>[]::new));
+    }
+
+    /**
+     * Register a step with a GValue ElementContract
+     */
+    public void register(Step step, ElementContract<GValue> contract) {
+        stepRegistry.put(step, contract);
+        for (GValue gValue: contract.getIds()) {
+            if (gValue.getName() != null) {
+                gValueRegistry.put(gValue.getName(), gValue);
+            }
+        }
+    }
+
+    /**
+     * Register a step with a GValue LabelContract
+     */
+    public void register(Step step, EdgeLabelContract<GValue<String>> contract) {
+        stepRegistry.put(step, contract);
+        for (GValue gValue: contract.getEdgeLabels()) {
+            if (gValue.getName() != null) {
+                gValueRegistry.put(gValue.getName(), gValue);
+            }
+        }
     }
 
     public void register(Step step, P predicate) {
@@ -71,42 +92,20 @@ public class GValueManager {
         predicateRegistry.putAll(other.predicateRegistry);
     }
 
-//    public List<String> getGvalueForStep(Step step){
-//
-//    }
-
     /**
      * Copy parameter state from `fromStep` to `toStep`
      */
     public <S, E> void copyParams(Step<S,E> fromStep, Step<S,E> toStep) {
         if (stepRegistry.containsKey(fromStep)) {
-            try {
-                stepRegistry.put(toStep, (StepRegistration)  stepRegistry.get(fromStep).clone());
-            } catch (CloneNotSupportedException e) {
-                throw new RuntimeException(e);
-            }
+            stepRegistry.put(toStep, stepRegistry.get(fromStep)); //TODO Deep Copy?
         }
+    }
+
+    public StepContract getStepContract(Step step) {
+        return stepRegistry.get(step);
     }
 
     public <S> boolean isParameterized(Step step) {
-        return this.stepRegistry.containsKey(step);
-    }
-
-    private class StepRegistration implements Cloneable {
-        private List<String> params;
-
-        public StepRegistration(String... name) {
-            this.params = Arrays.stream(name).collect(Collectors.toList());
-        }
-
-        public List<String> getParams() {
-            return params;
-        }
-
-        public Object clone() throws CloneNotSupportedException {
-            //TODO deep copy
-            StepRegistration clone = (StepRegistration) super.clone();
-            return clone;
-        }
+        return this.stepRegistry.containsKey(step) || this.predicateRegistry.containsKey(step);
     }
 }

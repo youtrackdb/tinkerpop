@@ -18,13 +18,10 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step;
 
-/**
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-public interface Ranging {
+public interface GValueContracting<T> {
 
-    public Long getLowRange();
+    public T getGValueContract();
 
-    public Long getHighRange();
+    public boolean hasParameterizedContract();
 
 }

@@ -24,11 +24,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Barrier;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Bypassing;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValueContracting;
+import org.apache.tinkerpop.gremlin.process.traversal.step.RangeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Ranging;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.util.TraverserSet;
 import org.apache.tinkerpop.gremlin.process.traversal.util.FastNoSuchElementException;
-import org.apache.tinkerpop.gremlin.structure.util.CloseableIterator;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
@@ -43,7 +44,7 @@ import java.util.function.BinaryOperator;
  * @author Bob Briody (http://bobbriody.com)
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, Bypassing, Barrier<TraverserSet<S>> {
+public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, Bypassing, Barrier<TraverserSet<S>>, RangeContract<Long>, GValueContracting<RangeContract<GValue<Long>>> {
 
     private long low;
     private final long high;
@@ -58,12 +59,6 @@ public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, 
         this.low = low;
         this.high = high;
     }
-
-    public boolean isParameterized() {
-        return this.getTraversal().getGValueManager().isParameterized(this);
-    }
-
-    
 
     @Override
     protected boolean filter(final Traverser.Admin<S> traverser) {
@@ -111,12 +106,12 @@ public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, 
     }
 
     @Override
-    public long getLowRange() {
+    public Long getLowRange() {
         return this.low;
     }
 
     @Override
-    public long getHighRange() {
+    public Long getHighRange() {
         return this.high;
     }
 
@@ -184,6 +179,17 @@ public final class RangeGlobalStep<S> extends FilterStep<S> implements Ranging, 
             traverser.setSideEffects(this.getTraversal().getSideEffects());
             this.addStart(traverser);
         });
+    }
+
+    @Override
+    public RangeContract<GValue<Long>> getGValueContract() {
+        //TODO better type safety?
+        return (RangeContract<GValue<Long>>) this.traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasParameterizedContract() {
+        return this.traversal.getGValueManager().isParameterized(this);
     }
 
     ////////////////

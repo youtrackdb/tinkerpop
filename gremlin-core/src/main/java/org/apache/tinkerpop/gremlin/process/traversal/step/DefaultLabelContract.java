@@ -18,13 +18,15 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step;
 
-/**
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-public interface Ranging {
+public class DefaultLabelContract<V> implements EdgeLabelContract<V> {
+    private V[] labels;
 
-    public Long getLowRange();
+    public DefaultLabelContract(V[] labels) {
+        this.labels = labels;
+    }
 
-    public Long getHighRange();
-
+    @Override
+    public V[] getEdgeLabels() {
+        return labels;
+    }
 }

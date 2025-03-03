@@ -22,6 +22,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValueContracting;
+import org.apache.tinkerpop.gremlin.process.traversal.step.EdgeLabelContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -45,7 +47,7 @@ import java.util.stream.Collectors;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class VertexStep<E extends Element> extends FlatMapStep<Vertex, E> implements AutoCloseable, Configuring {
+public class VertexStep<E extends Element> extends FlatMapStep<Vertex, E> implements AutoCloseable, Configuring, EdgeLabelContract<String>, GValueContracting<EdgeLabelContract<GValue<String>>> {
 
     protected Parameters parameters = new Parameters();
     private final String[] edgeLabels;
@@ -148,5 +150,15 @@ public class VertexStep<E extends Element> extends FlatMapStep<Vertex, E> implem
     @Override
     public void close() throws Exception {
         closeIterator();
+    }
+
+    @Override
+    public EdgeLabelContract<GValue<String>> getGValueContract() {
+        return (EdgeLabelContract<GValue<String>>) this.traversal.getGValueManager().getStepContract(this);
+    }
+
+    @Override
+    public boolean hasParameterizedContract() {
+        return this.traversal.getGValueManager().isParameterized(this);
     }
 }

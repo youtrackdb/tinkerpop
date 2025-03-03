@@ -18,13 +18,15 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step;
 
-/**
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-public interface Ranging {
+public class DefaultConstantContract<V> implements ConstantContract<V> {
+    private V constant;
 
-    public Long getLowRange();
+    public DefaultConstantContract(V constant) {
+        this.constant = constant;
+    }
 
-    public Long getHighRange();
-
+    @Override
+    public V getConstant() {
+        return constant;
+    }
 }

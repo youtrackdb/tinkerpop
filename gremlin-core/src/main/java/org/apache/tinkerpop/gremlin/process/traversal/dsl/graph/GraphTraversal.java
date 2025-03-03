@@ -46,9 +46,15 @@ import org.apache.tinkerpop.gremlin.process.traversal.lambda.PredicateTraverser;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.TrueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
+import org.apache.tinkerpop.gremlin.process.traversal.step.ConstantContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.DefaultConstantContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.DefaultElementContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.DefaultLabelContract;
+import org.apache.tinkerpop.gremlin.process.traversal.step.DefaultRangeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.FromToModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Mutating;
+import org.apache.tinkerpop.gremlin.process.traversal.step.RangeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ReadWriting;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TimesModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalOptionParent;
@@ -372,8 +378,8 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default <E2> GraphTraversal<S, E2> constant(final GValue<E2> e) {
         this.asAdmin().getGremlinLang().addStep(GraphTraversal.Symbols.constant, e);
-        ConstantStep step = new ConstantStep<E, E2>(this.asAdmin(), e.get());
-        this.asAdmin().getGValueManager().register(step, e.get());
+        ConstantStep step = new ConstantStep<E, E2>(this.asAdmin(), e == null ? null : e.get());
+        this.asAdmin().getGValueManager().register(step, new DefaultConstantContract<GValue>(e));
         return this.asAdmin().addStep(step);
     }
 
@@ -390,7 +396,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         final Object[] ids = null == vertexIdsOrElements ? new Object[] { null } : vertexIdsOrElements;
         this.asAdmin().getGremlinLang().addStep(Symbols.V, ids);
         GraphStep step = new GraphStep<>(this.asAdmin(), Vertex.class, false, GValue.resolveToValues(GValue.ensureGValues(ids))); //TODO cleanup
-        this.asAdmin().getGValueManager().register(step, vertexIdsOrElements);
+        this.asAdmin().getGValueManager().register(step, new DefaultElementContract(vertexIdsOrElements));
         return this.asAdmin().addStep(step);
     }
 
@@ -643,7 +649,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Edge> outE(final GValue<String>... edgeLabels) {
         this.asAdmin().getGremlinLang().addStep(GraphTraversal.Symbols.outE, edgeLabels);
         VertexStep step = new VertexStep<>(this.asAdmin(), Edge.class, Direction.OUT, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-        this.asAdmin().getGValueManager().register(step, edgeLabels);
+        this.asAdmin().getGValueManager().register(step, new DefaultLabelContract<>(edgeLabels));
         return this.asAdmin().addStep(step);
     }
 
@@ -3139,7 +3145,8 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         this.asAdmin().getGremlinLang().addStep(Symbols.range, low, high);
 
         RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), low.get(), high.get());
-        this.asAdmin().getGValueManager().register(step, low, high);
+
+        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract(low, high));
 
         return this.asAdmin().addStep(step);
     }
@@ -3182,7 +3189,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
                 ? new RangeGlobalStep<>(this.asAdmin(), low.get(), high.get())
                 : new RangeLocalStep<>(this.asAdmin(), low.get(), high.get());
 
-        this.asAdmin().getGValueManager().register(step, low, high);
+        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract(low, high));
 
         return this.asAdmin().addStep(step);
     }
@@ -3215,7 +3222,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
 
         RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), 0, limit.get());
 
-        this.asAdmin().getGValueManager().register(step, null, limit);
+        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(null, limit)); //TODO is null correct here?
 
         return this.asAdmin().addStep(step);
     }
@@ -3254,7 +3261,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
                 ? new RangeGlobalStep<>(this.asAdmin(), 0, limit.get())
                 : new RangeLocalStep<>(this.asAdmin(), 0, limit.get());
 
-        this.asAdmin().getGValueManager().register(step, null, limit);
+        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(null, limit)); //TODO is null correct?
 
         return this.asAdmin().addStep(step);
     }
@@ -3376,7 +3383,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
 
         RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), skip.get(), -1);
 
-        this.asAdmin().getGValueManager().register(step, skip, null);
+        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(skip, null)); //TODO is null correct?
 
         return this.asAdmin().addStep(step);
     }
@@ -3413,7 +3420,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
                 ? new RangeGlobalStep<>(this.asAdmin(), skip.get(), -1)
                 : new RangeLocalStep<>(this.asAdmin(), skip.get(), -1);
 
-        this.asAdmin().getGValueManager().register(step, skip, null);
+        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(skip, null)); //TODO is null correct?
 
         return this.asAdmin().addStep(step);
     }
