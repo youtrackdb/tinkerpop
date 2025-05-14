@@ -144,4 +144,17 @@ public final class EarlyLimitStrategy
     public static EarlyLimitStrategy instance() {
         return INSTANCE;
     }
+
+    @Override
+    public void updateGValue(final Traversal.Admin<?, ?> traversal) {
+        // EarlyLimitStrategy makes optimizations according to the current high and low values in RangeGlobalStep.
+        // These GValues must be cleared as these optimizations are not generalizable for any high/low values.
+        // Other steps GValues may remain intact as this strategy does not operate on them.
+
+        for (final Step step : traversal.getSteps()) {
+            if (step instanceof RangeGlobalStep) {
+                traversal.getGValueManager().reset(step);
+            }
+        }
+    }
 }

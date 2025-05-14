@@ -769,6 +769,7 @@ public final class TraversalHelper {
         parentTraversal.getGraph().ifPresent(childTraversal::setGraph);
         for (final TraversalStrategy<?> strategy : parentTraversal.getStrategies()) {
             strategy.apply(childTraversal);
+            strategy.updateGValue(childTraversal);
             if (null != stopAfterStrategy && stopAfterStrategy.isInstance(strategy))
                 break;
         }

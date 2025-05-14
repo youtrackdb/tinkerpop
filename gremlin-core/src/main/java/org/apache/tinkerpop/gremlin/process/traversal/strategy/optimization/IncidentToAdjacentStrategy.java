@@ -161,4 +161,9 @@ public final class IncidentToAdjacentStrategy extends AbstractTraversalStrategy<
     public Set<Class<? extends OptimizationStrategy>> applyPost() {
         return Collections.singleton(PathRetractionStrategy.class);
     }
+
+    @Override
+    public void updateGValue(Traversal.Admin<?, ?> traversal) {
+        // Do nothing, strategy is 100% GValue safe as GValue state is copied to newly created steps
+    }
 }

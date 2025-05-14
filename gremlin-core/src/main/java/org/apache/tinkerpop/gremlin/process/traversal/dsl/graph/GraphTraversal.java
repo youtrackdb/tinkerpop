@@ -577,7 +577,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.both, edgeLabels);
         VertexStep<Vertex> step = new VertexStep<>(this.asAdmin(), Vertex.class, Direction.BOTH, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
 
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
+        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<>(edgeLabels));
 
         return this.asAdmin().addStep(step);
     }

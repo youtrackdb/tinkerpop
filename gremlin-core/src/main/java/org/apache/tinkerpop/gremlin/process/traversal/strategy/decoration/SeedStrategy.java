@@ -99,4 +99,9 @@ public class SeedStrategy extends AbstractTraversalStrategy<TraversalStrategy.De
             return new SeedStrategy(seed);
         }
     }
+
+    @Override
+    public void updateGValue(Traversal.Admin<?, ?> traversal) {
+        // Do nothing, strategy is 100% GValue safe
+    }
 }

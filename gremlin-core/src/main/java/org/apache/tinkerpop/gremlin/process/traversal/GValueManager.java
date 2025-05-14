@@ -185,8 +185,36 @@ public class GValueManager implements Serializable {
         return this.stepRegistry.containsKey(step) || this.predicateRegistry.containsKey(step);
     }
 
+
+    /**
+     * Delete all data
+     */
     public void reset() {
         stepRegistry.clear();
         gValueRegistry.clear();
+    }
+
+    /**
+     * Delete all data for all GValues associated with a single Step
+     * @param step
+     */
+    public void reset(Step step) {
+        StepContract contract = stepRegistry.remove(step);
+
+        if (contract != null) {
+            if(contract instanceof RangeContract){
+                removeFromGValueRegistry(((RangeContract<GValue<?>>) contract).getHighRange());
+                removeFromGValueRegistry(((RangeContract<GValue<?>>) contract).getLowRange());
+            }// TODO else if chain for all contract types
+        }
+
+    }
+
+    private void removeFromGValueRegistry(GValue<?> gValue) {
+        if (gValue == null || gValue.getName() == null) {
+            return;
+        }
+        gValueRegistry.remove(gValue.getName());
+        //TODO:: Find if any steps are using same GValue and remove.
     }
 }

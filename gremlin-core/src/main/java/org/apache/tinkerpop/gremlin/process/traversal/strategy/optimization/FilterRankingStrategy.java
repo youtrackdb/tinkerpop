@@ -311,4 +311,9 @@ public final class FilterRankingStrategy extends AbstractTraversalStrategy<Trave
         }
         processingStack.push(childStep);
     }
+
+    @Override
+    public void updateGValue(Traversal.Admin<?, ?> traversal) {
+        // Do nothing, strategy is 100% GValue safe as it only relocates steps based on their class, it does not create new steps, nor does it make decisions based on step values
+    }
 }

@@ -138,6 +138,7 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
             while (strategyIterator.hasNext()) {
                 final TraversalStrategy<?> strategy = strategyIterator.next();
                 TraversalHelper.applyTraversalRecursively(strategy::apply, this);
+                TraversalHelper.applyTraversalRecursively(strategy::updateGValue, this);
             }
         }
 
