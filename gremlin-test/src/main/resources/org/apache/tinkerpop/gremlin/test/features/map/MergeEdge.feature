@@ -78,7 +78,7 @@ Feature: Step - mergeE()
       """
     And the traversal of
       """
-      g.V().as("v").mergeE([T.label:"self",OUT:Merge.outV,IN:Merge.inV]).option(Merge.onCreate,null).option(Merge.outV,select("v")).option(Merge.inV,select("v"))
+      g.V().as("v").mergeE([T.label:"self",(OUT):Merge.outV,(IN):Merge.inV]).option(Merge.onCreate,null).option(Merge.outV,select("v")).option(Merge.inV,select("v"))
       """
     When iterated to list
     Then the result should have a count of 1
@@ -140,7 +140,7 @@ Feature: Step - mergeE()
       """
     And the traversal of
       """
-      g.V().as("v").mergeE([T.label:"self",OUT:Merge.outV,IN:Merge.inV]).option(Merge.outV,select("v")).option(Merge.inV,select("v"))
+      g.V().as("v").mergeE([T.label:"self",(OUT):Merge.outV,(IN):Merge.inV]).option(Merge.outV,select("v")).option(Merge.inV,select("v"))
       """
     When iterated to list
     Then the result should have a count of 2
@@ -620,7 +620,7 @@ Feature: Step - mergeE()
     And using the parameter xx2 defined as "m[{\"t[id]\": \"v[vadas].id\"}]"
     And the traversal of
       """
-      g.mergeE([OUT:Merge.outV,IN:Merge.inV,T.label:"knows"]).option(outV, xx1).option(inV, xx2)
+      g.mergeE([(OUT):Merge.outV,(IN):Merge.inV,T.label:"knows"]).option(outV, xx1).option(inV, xx2)
       """
     When iterated to list
     Then the result should have a count of 1
@@ -657,7 +657,7 @@ Feature: Step - mergeE()
     And using the parameter vid2 defined as "v[vadas].id"
     And the traversal of
       """
-      g.V(vid1).as("x").V(vid2).as("y").mergeE([OUT:Merge.outV,IN:Merge.inV,T.label:"knows"]).option(outV, select("x")).option(inV, select("y"))
+      g.V(vid1).as("x").V(vid2).as("y").mergeE([(OUT):Merge.outV,(IN):Merge.inV,T.label:"knows"]).option(outV, select("x")).option(inV, select("y"))
       """
     When iterated to list
     Then the result should have a count of 1

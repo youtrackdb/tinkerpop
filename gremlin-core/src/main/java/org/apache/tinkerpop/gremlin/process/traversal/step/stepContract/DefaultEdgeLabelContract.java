@@ -18,7 +18,9 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step.stepContract;
 
-public class DefaultEdgeLabelContract<V> implements EdgeLabelContract<V> {
+import java.io.Serializable;
+
+public class DefaultEdgeLabelContract<V> implements EdgeLabelContract<V>, Serializable { //TODO Do contracts need to be serializable?
     private V[] labels;
 
     public DefaultEdgeLabelContract(V[] labels) {

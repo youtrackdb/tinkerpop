@@ -937,11 +937,11 @@ public class DotNetTranslateVisitor extends AbstractTranslateVisitor {
             sb.append("(");
             visit(ctx.traversalCardinality());
             sb.append(", ");
-            tryAppendCastToObject(ctx.genericArgument(0));
-            visit(ctx.genericArgument(0));
+            tryAppendCastToObject(ctx.genericLiteral());
+            visit(ctx.genericLiteral());
             sb.append(", ");
-            tryAppendCastToObject(ctx.genericArgument(1));
-            visit(ctx.genericArgument(1));
+            tryAppendCastToObject(ctx.genericArgument());
+            visit(ctx.genericArgument());
             sb.append(")");
             return null;
         } else {
@@ -954,8 +954,8 @@ public class DotNetTranslateVisitor extends AbstractTranslateVisitor {
         final String step = ctx.getChild(0).getText();
         sb.append(convertToPascalCase(step));
         sb.append("(");
-        tryAppendCastToString(ctx.stringArgument());
-        visit(ctx.stringArgument());
+        tryAppendCastToString(ctx.stringLiteral());
+        visit(ctx.stringLiteral());
         sb.append(")");
         return null;
     }
@@ -1192,8 +1192,8 @@ public class DotNetTranslateVisitor extends AbstractTranslateVisitor {
         return "CardinalityValue";
     }
 
-    private void tryAppendCastToString(final GremlinParser.StringArgumentContext ctx) {
-        if (ctx.variable() != null || ctx.stringLiteral() != null) {
+    private void tryAppendCastToString(final GremlinParser.StringLiteralContext ctx) {
+        if (ctx != null) {
             sb.append("(string) ");
         }
     }
@@ -1212,6 +1212,11 @@ public class DotNetTranslateVisitor extends AbstractTranslateVisitor {
 
     private void tryAppendCastToObject(final GremlinParser.GenericArgumentContext ctx) {
         if (ctx.variable() != null || ctx.genericLiteral().nullLiteral() != null)
+            sb.append("(object) ");
+    }
+
+    private void tryAppendCastToObject(final GremlinParser.GenericLiteralContext ctx) {
+        if (ctx.nullLiteral() != null)
             sb.append("(object) ");
     }
 

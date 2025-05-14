@@ -373,11 +373,6 @@ public class TraversalRootVisitorTest {
     }
 
     @Test
-    public void shouldParseTraversalMethod_constant_gValue()  {
-        compare(g.V().map(__.constant(GValue.of("foo", "bar"))), eval("g.V().map(__.constant(foo))"));
-    }
-
-    @Test
     public void shouldParseTraversalMethod_count_Empty() {
         compare(g.V().map(__.count()), eval("g.V().map(__.count())"));
     }
@@ -1466,28 +1461,13 @@ public class TraversalRootVisitorTest {
     }
 
     @Test
-    public void shouldParseTraversalMethod_difference_GValue() {
-        compare(g.V().map(__.difference(GValue.of("foo", "bar"))), eval("g.V().map(__.difference(foo))"));
-    }
-
-    @Test
     public void shouldParseTraversalMethod_disjunct() {
         compare(g.V().map(__.disjunct("test")), eval("g.V().map(__.disjunct(\"test\"))"));
     }
 
     @Test
-    public void shouldParseTraversalMethod_disjunct_GValue() {
-        compare(g.V().map(__.disjunct(GValue.of("foo", "bar"))), eval("g.V().map(__.disjunct(foo))"));
-    }
-
-    @Test
     public void shouldParseTraversalMethod_intersect() {
         compare(g.V().map(__.intersect("test")), eval("g.V().map(__.intersect(\"test\"))"));
-    }
-
-    @Test
-    public void shouldParseTraversalMethod_intersect_GValue() {
-        compare(g.V().map(__.intersect(GValue.of("foo", "bar"))), eval("g.V().map(__.intersect(foo))"));
     }
 
     @Test
@@ -1500,28 +1480,13 @@ public class TraversalRootVisitorTest {
     }
 
     @Test
-    public void shouldParseTraversalMethod_merge_GValue() {
-        compare(g.V().map(__.merge(GValue.of("foo", "bar"))), eval("g.V().map(__.merge(foo))"));
-    }
-
-    @Test
     public void shouldParseTraversalMethod_combine() {
         compare(g.V().map(__.combine("test")), eval("g.V().map(__.combine(\"test\"))"));
     }
 
     @Test
-    public void shouldParseTraversalMethod_combine_GValue() {
-        compare(g.V().map(__.combine(GValue.of("foo", "bar"))), eval("g.V().map(__.combine(foo))"));
-    }
-
-    @Test
     public void shouldParseTraversalMethod_product() {
         compare(g.V().map(__.product("test")), eval("g.V().map(__.product(\"test\"))"));
-    }
-
-    @Test
-    public void shouldParseTraversalMethod_product_GValue() {
-        compare(g.V().map(__.product(GValue.of("foo", "bar"))), eval("g.V().map(__.product(foo))"));
     }
 
     @Test

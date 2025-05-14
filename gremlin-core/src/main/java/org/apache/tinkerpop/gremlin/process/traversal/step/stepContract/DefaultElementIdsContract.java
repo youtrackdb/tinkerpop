@@ -18,7 +18,9 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step.stepContract;
 
-public class DefaultElementIdsContract<V> implements ElementIdsContract<V> {
+import java.io.Serializable;
+
+public class DefaultElementIdsContract<V> implements ElementIdsContract<V>, Serializable {
     private V[] ids;
 
     public DefaultElementIdsContract(V[] ids) {

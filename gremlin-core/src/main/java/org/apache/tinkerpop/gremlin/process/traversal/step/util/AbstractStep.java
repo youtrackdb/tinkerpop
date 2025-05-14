@@ -193,7 +193,9 @@ public abstract class AbstractStep<S, E> implements Step<S, E> {
             clone.traversal = EmptyTraversal.instance();
             clone.labels = new LinkedHashSet<>(this.labels);
             clone.reset();
-            this.getTraversal().getGValueManager().copyRegistryState(this, clone);
+            if (!this.getTraversal().isLocked()) {
+                this.getTraversal().getGValueManager().copyRegistryState(this, clone); // Probably not right. Need to register correct contracts when cloned step is added to a (possibly different) Traversal.
+            }
             return clone;
         } catch (final CloneNotSupportedException e) {
             throw new IllegalStateException(e.getMessage(), e);

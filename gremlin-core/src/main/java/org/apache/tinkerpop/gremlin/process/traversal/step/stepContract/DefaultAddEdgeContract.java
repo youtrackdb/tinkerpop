@@ -18,15 +18,14 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step.stepContract;
 
-import org.apache.commons.lang3.NotImplementedException;
-
+import java.util.HashMap;
 import java.util.Map;
 
 public class DefaultAddEdgeContract<L, Vertex, K, Value> implements AddEdgeContract<L, Vertex, K, Value> {
     private L label;
     private Vertex from;
     private Vertex to;
-    private Map<K, Value> properties;
+    private Map<K, Value> properties = new HashMap<>();
 
     public DefaultAddEdgeContract(L label) {
         this.label = label;

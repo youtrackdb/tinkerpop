@@ -277,25 +277,17 @@ public class TinkerGraphPlayTest {
     }
 
     @Test
-    public void testBugs() throws Exception {
+    @Ignore
+    public void testBugs() {
         final GraphTraversalSource g = TinkerFactory.createModern().traversal();
-        final GremlinLangScriptEngine se = new GremlinLangScriptEngine(
-                new VariableResolverCustomizer(VariableResolver.DefaultVariableResolver::new));
+        Object o1 = g.V().map(__.V(1));
+        System.out.println(g.V().as("a").both().as("b").dedup("a", "b").by(T.label).select("a", "b").explain());
+        System.out.println(g.V().as("a").both().as("b").dedup("a", "b").by(T.label).select("a", "b").toList());
 
-        final Bindings b = se.createBindings();
-        b.put("g", g);
-        System.out.println(((GraphTraversal) se.eval("g.V().coin(0.5).count()", b)).toList());
-
-        b.clear();
-        b.put("g", g);
-        b.put("x", 0.5d);
-        System.out.println(((GraphTraversal) se.eval("g.V().coin(x).count()", b)).toList());
-
-        b.clear();
-        b.put("g", g);
-        b.put("x", "josh");
-        b.put("y", 32);
-        System.out.println(((GraphTraversal) se.eval("g.V().has('name', x).has('age', y).count()", b)).toList());
+        Traversal<?,?> t =
+                g.V("3").
+                        union(__.repeat(out().simplePath()).times(2).count(),
+                                __.repeat(in().simplePath()).times(2).count());
     }
 
     @Test

@@ -49,8 +49,12 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
     public P(final PBiPredicate<V, V> biPredicate, V value) {
         parameterized = value instanceof GValue || (value instanceof List && ((List) value).stream().anyMatch(v -> v instanceof GValue));
         if (parameterized) {
-            gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
-            value = ((GValue<V>) value).get();
+            if (value instanceof GValue) {
+                gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
+                value = ((GValue<V>) value).get();
+            } else {
+                gValueRegistry = new GValueRegistry(this, GValue.ensureGValues(((List) value).toArray()));
+            }
         } else {
             gValueRegistry = new GValueRegistry();
         }
@@ -156,9 +160,10 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
         return new P(Compare.eq, value);
     }
 
-    public static <V> P<V> eq(final GValue<V> value) {
-        return new P(Compare.eq, value);
-    }
+    //TODO:: Deal with GValue in predicates
+//    public static <V> P<V> eq(final GValue<V> value) {
+//        return new P(Compare.eq, value);
+//    }
 
     /**
      * Determines if values are not equal.
@@ -298,13 +303,21 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
         return parameterized;
     }
 
-    protected class GValueRegistry {
+    protected class GValueRegistry implements Serializable {
         private Map<P, GValue> GValueRegistry = new IdentityHashMap<>();
 
         public GValueRegistry() {};
 
         public GValueRegistry(P predicate, GValue gValue) {
             GValueRegistry.put(predicate, gValue);
+        }
+
+        public GValueRegistry(P predicate, GValue[] gValues) {
+            for (GValue gValue : gValues) {
+                if (gValue.isVariable()) {
+                    GValueRegistry.put(predicate, gValue);
+                }
+            }
         }
 
         public GValueRegistry(GValueRegistry... registries) {

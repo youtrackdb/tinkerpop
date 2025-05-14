@@ -533,7 +533,7 @@ public class GraphTraversalSource implements TraversalSource {
         clone.bytecode.addStep(GraphTraversal.Symbols.V, ids);
         final GraphTraversal.Admin<Vertex, Vertex> traversal = new DefaultGraphTraversal<>(clone);
         GraphStep<Vertex, Vertex> step = new GraphStep<>(traversal, Vertex.class, true, GValue.resolveToValues(GValue.ensureGValues(ids))); //TODO cleanup
-        traversal.asAdmin().getGValueManager().register(step, new DefaultElementIdsContract(GValue.ensureGValues(vertexIds)));
+        traversal.asAdmin().getGValueManager().register(step, new DefaultElementIdsContract(GValue.ensureGValues(ids)));
         return traversal.addStep(step);
     }
 

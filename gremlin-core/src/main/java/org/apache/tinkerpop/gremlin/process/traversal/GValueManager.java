@@ -44,12 +44,22 @@ import java.util.Set;
  * Note that the manager can be locked, at which point it becomes immutable, and any attempt to modify it will result
  * in an exception.
  */
-public final class GValueManager implements Serializable {
+public final class GValueManager implements Serializable, Cloneable {
 
     private boolean locked = false;
     private final Map<String, GValue> gValueRegistry = new IdentityHashMap();
     private final Map<Step, StepContract> stepRegistry = new IdentityHashMap();
     private final Map<Step, P> predicateRegistry = new IdentityHashMap();
+
+    public GValueManager() {
+        this(Collections.EMPTY_MAP, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+    }
+
+    private GValueManager(Map<String, GValue> gValueRegistry, Map<Step, StepContract> stepRegistry,  Map<Step, P> predicateRegistry) {
+        this.gValueRegistry.putAll(gValueRegistry);
+        this.stepRegistry.putAll(stepRegistry);
+        this.predicateRegistry.putAll(predicateRegistry);
+    }
 
     /**
      * Register a step with any {@link StepContract}.
@@ -133,7 +143,9 @@ public final class GValueManager implements Serializable {
      * Copy the registry state from one step to another.
      */
     public <S, E> void copyRegistryState(final Step<S,E> sourceStep, final Step<S,E> targetStep) {
-        if (this.locked) throw Traversal.Exceptions.traversalIsLocked();
+        if (this.locked) {
+            throw Traversal.Exceptions.traversalIsLocked();
+        }
         if (stepRegistry.containsKey(sourceStep)) {
             stepRegistry.put(targetStep, stepRegistry.get(sourceStep));
         }
@@ -267,7 +279,9 @@ public final class GValueManager implements Serializable {
      * manager.
      */
     private void extractGValue(final AddVertexContract<GValue<String>, ?, GValue<?>> contract) {
-        gValueRegistry.put(contract.getLabel().getName(), contract.getLabel());
+        if (contract.getLabel() != null) {
+            gValueRegistry.put(contract.getLabel().getName(), contract.getLabel());
+        }
         for (GValue<?> value : contract.getProperties().values()) {
             gValueRegistry.put(value.getName(), value);
         }
@@ -278,10 +292,11 @@ public final class GValueManager implements Serializable {
      * manager.
      */
     private void extractGValue(final AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<?>> contract) {
-        gValueRegistry.put(contract.getLabel().getName(), contract.getLabel());
+        if (contract.getLabel() != null) {
+            gValueRegistry.put(contract.getLabel().getName(), contract.getLabel());
+        }
         if (contract.getFrom() != null) {
             gValueRegistry.put(contract.getFrom().getName(), contract.getFrom());
-
         }
         if (contract.getTo() != null) {
             gValueRegistry.put(contract.getTo().getName(), contract.getTo());
@@ -324,5 +339,10 @@ public final class GValueManager implements Serializable {
         if (contract.getStaticParams().getName() != null) {
             gValueRegistry.put(contract.getStaticParams().getName(), contract.getStaticParams());
         }
+    }
+
+    @Override
+    public GValueManager clone() {
+        return new GValueManager(gValueRegistry, stepRegistry, predicateRegistry);
     }
 }

@@ -54,7 +54,7 @@ import java.util.Set;
  */
 public class AddEdgeStartStep extends AbstractStep<Edge, Edge>
         implements Writing<Event.EdgeAddedEvent>, TraversalParent, Scoping, FromToModulating,
-        AddEdgeContract<String, Traversal.Admin<?,?>, Object, Object>, GValueContracting<AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<Object>>> {
+        AddEdgeContract<String, Traversal.Admin<?,?>, Object, Object>, GValueContracting<AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<?>>> {
 
     private static final String FROM = Graph.Hidden.hide("from");
     private static final String TO = Graph.Hidden.hide("to");
@@ -191,8 +191,8 @@ public class AddEdgeStartStep extends AbstractStep<Edge, Edge>
     }
 
     @Override
-    public AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<Object>> getGValueContract() {
-        return (AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<Object>>) traversal.getGValueManager().getStepContract(this);
+    public AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<?>> getGValueContract() {
+        return (AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<?>>) traversal.getGValueManager().getStepContract(this);
     }
 
     @Override

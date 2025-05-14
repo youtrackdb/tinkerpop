@@ -31,6 +31,10 @@ public class DefaultAddPropertyContract<K, V> implements AddPropertyContract<K, 
         this.value = value;
     }
 
+    public DefaultAddPropertyContract() {
+        this(null, null); //Covers the case of a non-parameterized add property step, which has parameterized meta-properties
+    }
+
     public void addProperty(K key, V value){
         metaProperties.put(key, value);
     }

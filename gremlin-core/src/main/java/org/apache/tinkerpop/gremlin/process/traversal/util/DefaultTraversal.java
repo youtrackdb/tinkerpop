@@ -287,6 +287,7 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
             clone.sideEffects = this.sideEffects.clone();
             clone.strategies = this.strategies;
             clone.bytecode = this.bytecode.clone();
+            clone.gValueManager = this.gValueManager.clone();
             for (final Step<?, ?> step : this.steps) {
                 final Step<?, ?> clonedStep = step.clone();
                 clonedStep.setTraversal(clone);

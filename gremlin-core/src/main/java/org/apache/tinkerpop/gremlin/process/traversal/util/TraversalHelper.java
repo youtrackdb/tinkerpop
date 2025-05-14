@@ -197,8 +197,8 @@ public final class TraversalHelper {
      * @param traversal the traversal to move the step in which must be the same as the one assigned to the step
      */
     public static <S, E> void moveStep(final Step<S, E> stepToMove, final int indexToMoveTo, final Traversal.Admin<?, ?> traversal) {
-        if (traversal != stepToMove.getTraversal())
-            throw new IllegalStateException("Traversals do not match");
+        if (!traversal.getSteps().contains(stepToMove))
+            throw new IllegalStateException("Traversal does not contain step");
 
         final GValueManager gValueManager = traversal.getGValueManager();
         final StepContract stepContract = gValueManager.getStepContract(stepToMove);
