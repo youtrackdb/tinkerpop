@@ -18,19 +18,27 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization;
 
-import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.Translator;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.GValueManagerVerifier;
 import org.apache.tinkerpop.gremlin.process.traversal.translator.GroovyTranslator;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
+import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
+import java.util.List;
 
+import static org.apache.tinkerpop.gremlin.process.traversal.P.eq;
 import static org.apache.tinkerpop.gremlin.process.traversal.P.gt;
 import static org.apache.tinkerpop.gremlin.process.traversal.P.gte;
 import static org.apache.tinkerpop.gremlin.process.traversal.P.inside;
@@ -40,24 +48,28 @@ import static org.apache.tinkerpop.gremlin.process.traversal.P.neq;
 import static org.apache.tinkerpop.gremlin.process.traversal.P.outside;
 import static org.apache.tinkerpop.gremlin.process.traversal.P.within;
 import static org.apache.tinkerpop.gremlin.process.traversal.P.without;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Daniel Kuppitz (http://gremlin.guru)
  * @author Stephen Mallette (http://stephen.genoprime.com)
  */
-@RunWith(Parameterized.class)
+@RunWith(Enclosed.class)
 public class CountStrategyTest {
     private static final Translator.ScriptTranslator translator = GroovyTranslator.of("__");
 
-    @Parameterized.Parameter(value = 0)
-    public Traversal.Admin original;
+    @RunWith(Parameterized.class)
+    public static class StandardTest {
+        @Parameterized.Parameter(value = 0)
+        public Traversal.Admin original;
 
-    @Parameterized.Parameter(value = 1)
-    public Traversal optimized;
+        @Parameterized.Parameter(value = 1)
+        public Traversal optimized;
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Iterable<Object[]> generateTestParameters() {
+        @Parameterized.Parameters(name = "{0}")
+        public static Iterable<Object[]> generateTestParameters() {
 
         return Arrays.asList(new Traversal[][]{
                 {__.count().is(0), __.limit(1).count().is(0)},
@@ -112,7 +124,7 @@ public class CountStrategyTest {
                 {__.filter(__.out().count().is(lt(2))), __.filter(__.out().limit(2).count().is(lt(2)))},
                 {__.filter(__.out().count().is(lte(-1))), __.filter(__.out().limit(0).count().is(lte(-1)))},
                 {__.filter(__.out().count().is(lte(1))), __.filter(__.out().limit(2).count().is(lte(1)))},
-                {__.filter(__.out().count().is(P.eq(-1))), __.filter(__.out().limit(0).count().is(P.eq(-1)))},
+                {__.filter(__.out().count().is(eq(-1))), __.filter(__.out().limit(0).count().is(eq(-1)))},
                 {__.filter(__.out().count().is(neq(-1))), __.filter(__.out().limit(0).count().is(neq(-1)))},
                 {__.filter(__.out().count().is(lte(1))), __.filter(__.out().limit(2).count().is(lte(1)))},
                 {__.filter(__.out().count().is(lt(-3).and(gt(0)))), __.filter(__.out().limit(1).count().is(lt(-3).and(gt(0))))},
@@ -149,17 +161,144 @@ public class CountStrategyTest {
         });
     }
 
-    void applyCountStrategy(final Traversal traversal) {
-        final TraversalStrategies strategies = new DefaultTraversalStrategies();
-        strategies.addStrategies(CountStrategy.instance());
-        traversal.asAdmin().setStrategies(strategies);
-        traversal.asAdmin().applyStrategies();
+        void applyCountStrategy(final Traversal traversal) {
+            final TraversalStrategies strategies = new DefaultTraversalStrategies();
+            strategies.addStrategies(CountStrategy.instance());
+            traversal.asAdmin().setStrategies(strategies);
+            traversal.asAdmin().applyStrategies();
+        }
+
+        @Test
+        public void doTest() {
+            final String repr = translator.translate(original.getBytecode()).getScript();
+            applyCountStrategy(original);
+            assertEquals(repr, optimized, original);
+
+            assertThat(optimized.asAdmin().getGValueManager().isEmpty(), is(true));
+        }
     }
 
-    @Test
-    public void doTest() {
-        final String repr = translator.translate(original.getBytecode()).getScript();
-        applyCountStrategy(original);
-        assertEquals(repr, optimized, original);
+    /**
+     * Tests that {@link GValueManager} is properly maintaining state in cases where new {@link RangeGlobalStep}
+     * instances are being introduced by CountStrategy.
+     */
+    @RunWith(Parameterized.class)
+    public static class GValueClearedBecauseItWasAccessedToInformTest {
+
+        @Parameterized.Parameter(value = 0)
+        public Traversal.Admin<?, ?> traversal;
+
+        @Parameterized.Parameters(name = "{0}")
+        public static Iterable<Object[]> generateTestParameters() {
+            return Arrays.asList(new Object[][]{
+                    { __.count().is(GValue.of("x", 0)).asAdmin() },
+                    { __.count().is(GValue.of("x", 1)).asAdmin() },
+                    { __.out().count().is(gt(GValue.ofInteger("x", 1))).asAdmin() },
+                    { __.out().count().is(lt(GValue.ofInteger("x", 1))).asAdmin() },
+                    { __.out().count().is(gte(GValue.ofInteger("x", 1))).asAdmin() },
+                    { __.out().count().is(lte(GValue.ofInteger("x", 1))).asAdmin() },
+                    { __.out().count().is(eq(GValue.ofInteger("x", 1))).asAdmin() },
+                    { __.out().count().is(neq(GValue.ofInteger("x", 1))).asAdmin() },
+                    {__.count().is(GValue.of("x", 0))},
+                    {__.count().is(GValue.of("x", 1))},
+                    {__.count().is(GValue.of("x", -1))},
+                    {__.count().is(GValue.of("x", -2))},
+                    {__.count().is(GValue.of("x", -2023))},
+                    {__.out().count().is(GValue.of("x", 0))},
+                    {__.outE().count().is(lt(GValue.ofInteger("x", 1)))},
+                    {__.both().count().is(lte(GValue.ofInteger("x", 0)))},
+                    {__.map(__.out().count().is(GValue.of("x", 0)))},
+                    {__.map(__.outE().count().is(lt(GValue.ofInteger("x", 1))))},
+                    {__.map(__.both().count().is(lte(GValue.ofInteger("x", 0))))},
+                    {__.filter(__.out().count().is(GValue.of("x", 0)))},
+                    {__.filter(__.outE().count().is(lt(GValue.ofInteger("x", 1))))},
+                    {__.filter(__.both().count().is(lte(GValue.ofInteger("x", 0))))},
+                    {__.filter(__.out().out().count().is(GValue.of("x", 0)))},
+                    {__.store("x").count().is(GValue.of("x", 0)).as("a")},
+                    {__.out().count().as("a").is(GValue.of("x", 0))},
+                    {__.out().count().is(neq(GValue.ofInteger("x", 4)))},
+                    {__.out().count().is(lte(GValue.ofInteger("x", 3)))},
+                    {__.out().count().is(lt(GValue.ofInteger("x", 3)))},
+                    {__.out().count().is(gt(GValue.ofInteger("x", 2)))},
+                    {__.out().count().is(gte(GValue.ofInteger("x", 2)))},
+                    {__.out().count().is(inside(GValue.ofInteger("x", 2), GValue.ofInteger("y", 4)))},
+                    {__.out().count().is(outside(GValue.ofInteger("x", 2), GValue.ofInteger("y", 4)))},
+                    // TODO: within/out() are broken for GValue - not initializing properly in the P constructor to preserve the GValue and missing the chance to mark as parameterized
+//                    {__.out().count().is(within(GValue.ofInteger("x", 2), GValue.ofInteger("y", 6), GValue.ofInteger("z", 4)))},
+//                    {__.out().count().is(without(GValue.ofInteger("x", 2), GValue.ofInteger("y", 6), GValue.ofInteger("z", 4)))},
+                    {__.map(__.count().is(GValue.of("x", 0)))},
+                    {__.flatMap(__.count().is(GValue.of("x", 0)))},
+                    {__.flatMap(__.count().is(GValue.of("x", 0))).as("a")},
+                    {__.filter(__.count().is(GValue.of("x", 0))).as("a")},
+                    {__.filter(__.count().is(GValue.of("x", 0)))},
+                    {__.sideEffect(__.count().is(GValue.of("x", 0)))},
+                    {__.branch(__.count().is(GValue.of("x", 0)))},
+                    {__.count().is(GValue.of("x", 0)).store("x")},
+                    {__.repeat(__.out()).until(__.outE().count().is(GValue.of("x", 0)))},
+                    {__.repeat(__.out()).until(__.out().out().values("name").count().is(GValue.of("x", 0)))},
+                    {__.repeat(__.out()).until(__.out().out().properties("age").has("x").count().is(GValue.of("x", 0)))},
+                    {__.repeat(__.out()).emit(__.outE().count().is(GValue.of("x", 0)))},
+                    {__.where(__.outE().hasLabel("created").count().is(GValue.of("x", 0)))},
+                    {__.where(__.out().outE().hasLabel("created").count().is(GValue.of("x", 0)))},
+                    {__.where(__.out().outE().hasLabel("created").count().is(GValue.of("x", 0)).store("x"))},
+                    {__.where(__.or(__.out("none").out().count().is(GValue.of("x", 0)), __.has("none")))},
+                    {__.where(__.or(__.out("none").out().count().is(GValue.of("x", 0)), __.has("none").count().is(GValue.of("x", 0))))},
+                    {__.where(__.or(__.out("none").out(), __.has("none").count().is(GValue.of("x", 0))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", -1))))},
+                    {__.filter(__.out().count().is(gte(GValue.ofInteger("x", -1))))},
+                    {__.filter(__.out().count().is(gte(GValue.ofInteger("x", 0))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", -1))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 0))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 2))))},
+                    {__.filter(__.out().count().is(lte(GValue.ofInteger("x", -1))))},
+                    {__.filter(__.out().count().is(lte(GValue.ofInteger("x", 1))))},
+                    {__.filter(__.out().count().is(eq(GValue.ofInteger("x", -1))))},
+                    {__.filter(__.out().count().is(neq(GValue.ofInteger("x", -1))))},
+                    {__.filter(__.out().count().is(lte(GValue.ofInteger("x", 1))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", -3)).and(gt(GValue.ofInteger("y", 0)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 1)).and(gt(GValue.ofInteger("y", -5)))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", -5)).and(lt(GValue.ofInteger("y", 1)))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", -5)).and(gt(GValue.ofInteger("y", 7)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 1)).or(gt(GValue.ofInteger("y", -5)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 1)).or(gt(GValue.ofInteger("y", 3)))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", 3)).or(lt(GValue.ofInteger("y", -51)))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", -5)).or(lt(GValue.ofInteger("y", 1)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 10)).and(gt(GValue.ofInteger("y", 1)))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", 1)).and(lt(GValue.ofInteger("y", 10)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 10)).or(gt(GValue.ofInteger("y", 1)))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", 1)).or(lt(GValue.ofInteger("y", 10)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", 5)).and(gt(GValue.ofInteger("y", 10)))))},
+                    {__.filter(__.out().count().is(gt(GValue.ofInteger("x", 10)).and(lt(GValue.ofInteger("y", 5)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", -5)).and(lt(GValue.ofInteger("y", 1)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", -5)).and(lt(GValue.ofInteger("y", -1)))))},
+                    {__.filter(__.out().count().is(lt(GValue.ofInteger("x", -5)).or(lt(GValue.ofInteger("y", -1)))))},
+                    {__.where(__.in("knows").count().is(inside(GValue.ofInteger("x", -1), GValue.ofInteger("y", 1)).and(lt(GValue.ofInteger("x", -1)))))},
+                    {__.where(__.inV().count().is(outside(GValue.ofInteger("x", -1), GValue.ofInteger("x", -2))))},
+                    {__.filter(__.bothE().count().is(gt(GValue.ofInteger("x", 0))))},
+                    {__.filter(__.bothE().count().is(gte(GValue.ofInteger("x", 1))))},
+                    {__.filter(__.bothE().count().is(gt(GValue.ofInteger("x", 1))))},
+                    {__.filter(__.bothE().count().is(gte(GValue.ofInteger("x", 2))))},
+                    {__.and(__.out().count().is(GValue.of("x", 0)), __.in().count().is(GValue.of("x", 0)))},
+                    {__.and(__.out().count().is(GValue.of("x", 0)), __.in().count().is(GValue.of("y", 1)))},
+                    {__.and(__.out().count().is(GValue.of("x", 1)), __.in().count().is(GValue.of("y", 0)))},
+                    {__.and(__.out().out().count().is(GValue.of("x", 0)), __.in().count().is(GValue.of("x", 0)))},
+                    {__.or(__.out().count().is(GValue.of("x", 0)), __.in().count().is(GValue.of("x", 0)))},
+                    {__.path().filter(__.count().is(gte(GValue.ofDouble("x", 0.5)))).limit(5)},
+                    {__.path().filter(__.unfold().count().is(gte(GValue.ofDouble("x", 0.5))))},
+                    {__.path().filter(__.unfold().count().is(gte(GValue.ofDouble("x", 1.5))))},
+            });
+        }
+
+        @Test
+        public void shouldMaintainGValueManagerState() {
+            GValueManagerVerifier.verify(traversal, CountStrategy.instance()).
+                    beforeApplying().
+                    stepsOfClassAreParameterized(true, IsStep.class);
+
+            // After applying strategies, all IsSteps should have no GValue references
+            GValueManagerVerifier.verify(traversal, CountStrategy.instance()).
+                    afterApplying().
+                    managerIsEmpty();
+        }
     }
 }

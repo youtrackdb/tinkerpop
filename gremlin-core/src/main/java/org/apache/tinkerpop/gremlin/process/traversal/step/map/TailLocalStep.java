@@ -32,6 +32,7 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -80,8 +81,7 @@ public final class TailLocalStep<S> extends ScalarMapStep<S, S> implements TailC
 
     @Override
     public TailContract<GValue<Long>> getGValueContract() {
-        //TODO better type safety?
-        return (TailContract<GValue<Long>>) this.traversal.getGValueManager().getStepContract(this);
+        return this.traversal.getGValueManager().getStepContract(this);
     }
 
     @Override

@@ -147,6 +147,7 @@ public final class CountStrategy extends AbstractTraversalStrategy<TraversalStra
                         }
                     }
                 }
+
                 if (highRange != null) {
                     if (useNotStep || dismissCountIs) {
                         traversal.asAdmin().removeStep(isStep); // IsStep
@@ -180,6 +181,7 @@ public final class CountStrategy extends AbstractTraversalStrategy<TraversalStra
                                 } else {
                                     inner = __.identity().asAdmin();
                                 }
+
                                 if (prev != null)
                                     TraversalHelper.replaceStep(prev, new NotStep<>(traversal, inner), traversal);
                                 else
@@ -189,11 +191,16 @@ public final class CountStrategy extends AbstractTraversalStrategy<TraversalStra
                             final Step parentStep = traversal.getParent().asStep();
                             if (!(parentStep instanceof EmptyStep)) {
                                 final Traversal.Admin parentTraversal = parentStep.getTraversal();
-                                //parentTraversal.removeStep(parentStep); // this leads to IndexOutOfBoundsExceptions
                                 TraversalHelper.replaceStep(parentStep, new IdentityStep<>(parentTraversal), parentTraversal);
                             }
                         }
                     } else {
+                        // if this strategy decides it can add a limit() then it means we've accessed the GValue for
+                        // logic to reach this point and now intend to insert a new step based on that logic. by doing
+                        // this, we nullify the possibility of using that GValue for downstream optimizations as it
+                        // would tie the dynamic GValue to a statically constructed literal (i.e. the highRange) that
+                        // only applies for this current strategy application.
+                        traversal.getGValueManager().remove(isStep);
                         TraversalHelper.insertBeforeStep(new RangeGlobalStep<>(traversal, 0L, highRange < 0 ? 0 : highRange), curr, traversal);
                     }
                     i++;

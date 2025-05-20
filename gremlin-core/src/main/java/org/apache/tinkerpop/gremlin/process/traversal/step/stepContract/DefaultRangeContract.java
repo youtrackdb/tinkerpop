@@ -18,6 +18,12 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step.stepContract;
 
+/**
+ * Represents a default implementation of the {@link RangeContract} interface.
+ * This class defines a range with a specified low and high bound.
+ *
+ * @param <V> the type that defines the boundaries of the range
+ */
 public class DefaultRangeContract<V> implements RangeContract<V> {
     private V low;
     private V high;
@@ -27,11 +33,21 @@ public class DefaultRangeContract<V> implements RangeContract<V> {
         this.high = high;
     }
 
+    /**
+     * Retrieves the lower bound of the range.
+     *
+     * @return the lower bound of the range as an object of type V
+     */
     @Override
     public V getLowRange() {
         return low;
     }
 
+    /**
+     * Retrieves the high boundary of the range.
+     *
+     * @return the high boundary value of the range
+     */
     @Override
     public V getHighRange() {
         return high;

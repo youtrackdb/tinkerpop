@@ -98,6 +98,7 @@ public final class EarlyLimitStrategy
             }
         }
     }
+
     private boolean isMapStepMovable(final Step<?,?> step) {
         return step instanceof MapStep && StepOutputArityPredictor.hasAlwaysBoundResult(step);
     }
@@ -111,6 +112,9 @@ public final class EarlyLimitStrategy
             // there's a previous RangeStep which might affect the effective range of the current RangeStep
             // recompute this step's low and high; if the result is still a valid range, create a new RangeStep,
             // otherwise a NoneStep
+            //
+            // GValue instances that merge here are discarded when the original steps are removed in favor of the
+            // merged one. no reasonable way to resolve that.
             final RangeGlobalStep other = (RangeGlobalStep) insertAfter;
             final long low = other.getLowRange() + step.getLowRange();
             if (other.getHighRange() == -1L) {
@@ -143,18 +147,5 @@ public final class EarlyLimitStrategy
 
     public static EarlyLimitStrategy instance() {
         return INSTANCE;
-    }
-
-    @Override
-    public void updateGValue(final Traversal.Admin<?, ?> traversal) {
-        // EarlyLimitStrategy makes optimizations according to the current high and low values in RangeGlobalStep.
-        // These GValues must be cleared as these optimizations are not generalizable for any high/low values.
-        // Other steps GValues may remain intact as this strategy does not operate on them.
-
-        for (final Step step : traversal.getSteps()) {
-            if (step instanceof RangeGlobalStep) {
-                traversal.getGValueManager().reset(step);
-            }
-        }
     }
 }

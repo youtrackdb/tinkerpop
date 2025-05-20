@@ -113,7 +113,9 @@ public final class IncidentToAdjacentStrategy extends AbstractTraversalStrategy<
         for (final String label : (Iterable<String>) step2.getLabels()) {
             newStep.addLabel(label);
         }
-        traversal.getGValueManager().copyParams(step1, newStep);
+
+        // the newStep assumes the StepContract of original step
+        traversal.getGValueManager().copyRegistryState(step1, newStep);
         TraversalHelper.replaceStep(step1, newStep, traversal);
         traversal.removeStep(step2);
     }
@@ -160,10 +162,5 @@ public final class IncidentToAdjacentStrategy extends AbstractTraversalStrategy<
     @Override
     public Set<Class<? extends OptimizationStrategy>> applyPost() {
         return Collections.singleton(PathRetractionStrategy.class);
-    }
-
-    @Override
-    public void updateGValue(Traversal.Admin<?, ?> traversal) {
-        // Do nothing, strategy is 100% GValue safe as GValue state is copied to newly created steps
     }
 }

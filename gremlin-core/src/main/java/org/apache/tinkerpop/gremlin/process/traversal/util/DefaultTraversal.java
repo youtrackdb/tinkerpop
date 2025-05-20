@@ -138,7 +138,6 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
             while (strategyIterator.hasNext()) {
                 final TraversalStrategy<?> strategy = strategyIterator.next();
                 TraversalHelper.applyTraversalRecursively(strategy::apply, this);
-                TraversalHelper.applyTraversalRecursively(strategy::updateGValue, this);
             }
         }
 
@@ -341,6 +340,9 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
             resetTraverserRequirements();
         }
 
+        // lock up the GValueManager which will finalize GValue variables for the traversal
+        gValueManager.lock();
+
         // lock the parent before the children
         this.locked = true;
 
@@ -400,8 +402,11 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
         if (this.locked) throw Exceptions.traversalIsLocked();
         final Step previousStep = this.steps.size() > 0 && index != 0 ? steps.get(index - 1) : null;
         final Step nextStep = this.steps.size() > index + 1 ? steps.get(index + 1) : null;
-        //this.steps.get(index).setTraversal(EmptyTraversal.instance());
-        this.steps.remove(index);
+        final Step removedStep = this.steps.remove(index);
+
+        // reset state in manager for the removed step
+        getGValueManager().remove(removedStep);
+
         if (null != previousStep) previousStep.setNextStep(null == nextStep ? EmptyStep.instance() : nextStep);
         if (null != nextStep) nextStep.setPreviousStep(null == previousStep ? EmptyStep.instance() : previousStep);
         return (Traversal.Admin<S2, E2>) this;

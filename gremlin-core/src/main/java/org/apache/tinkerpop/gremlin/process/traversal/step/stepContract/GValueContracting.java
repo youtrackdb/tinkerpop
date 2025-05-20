@@ -18,7 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step.stepContract;
 
-public interface GValueContracting<T> {
+public interface GValueContracting<T extends StepContract> {
 
     public T getGValueContract();
 

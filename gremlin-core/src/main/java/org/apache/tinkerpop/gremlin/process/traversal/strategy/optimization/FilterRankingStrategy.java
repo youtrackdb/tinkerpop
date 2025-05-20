@@ -18,6 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization;
 
+import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -35,6 +36,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.OrStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.StepContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversalStrategy;
@@ -124,8 +126,7 @@ public final class FilterRankingStrategy extends AbstractTraversalStrategy<Trave
                                     modified = true;
                                 }
                                 if (stepRanking.computeIfAbsent(step, FilterRankingStrategy::getStepRank) > nextRank) {
-                                    t.removeStep(nextStep);
-                                    t.addStep(i, nextStep);
+                                    TraversalHelper.moveStep(nextStep, i, t);
                                     modified = true;
                                 }
                             }
@@ -310,10 +311,5 @@ public final class FilterRankingStrategy extends AbstractTraversalStrategy<Trave
             collectionList.add(childStep);
         }
         processingStack.push(childStep);
-    }
-
-    @Override
-    public void updateGValue(Traversal.Admin<?, ?> traversal) {
-        // Do nothing, strategy is 100% GValue safe as it only relocates steps based on their class, it does not create new steps, nor does it make decisions based on step values
     }
 }

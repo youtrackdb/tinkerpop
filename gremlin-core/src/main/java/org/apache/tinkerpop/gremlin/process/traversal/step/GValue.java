@@ -119,7 +119,7 @@ public class GValue<V> implements Serializable {
      *
      * @param value the value of the variable
      */
-    static <V> GValue<V> of(final V value) {
+    public static <V> GValue<V> of(final V value) {
         if (value instanceof GValue) return (GValue) value;
         return new GValue<>(GType.getType(value), value);
     }
@@ -140,7 +140,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a string value.
      */
-    static GValue<String> ofString(final String value) {
+    public static GValue<String> ofString(final String value) {
         return new GValue<>(GType.STRING, value);
     }
 
@@ -154,7 +154,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for an integer value.
      */
-    static GValue<Integer> ofInteger(final Integer value) {
+    public static GValue<Integer> ofInteger(final Integer value) {
         return new GValue<>(GType.INTEGER, value);
     }
 
@@ -168,7 +168,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a boolean value.
      */
-    static GValue<Boolean> ofBoolean(final Boolean value) {
+    public static GValue<Boolean> ofBoolean(final Boolean value) {
         return new GValue<>(GType.BOOLEAN, value);
     }
 
@@ -182,7 +182,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a double value.
      */
-    static GValue<Double> ofDouble(final Double value) {
+    public static GValue<Double> ofDouble(final Double value) {
         return new GValue<>(GType.DOUBLE, value);
     }
 
@@ -196,7 +196,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a BigInteger value.
      */
-    static GValue<BigInteger> ofBigInteger(final BigInteger value) {
+    public static GValue<BigInteger> ofBigInteger(final BigInteger value) {
         return new GValue<>(GType.BIG_INTEGER, value);
     }
 
@@ -210,7 +210,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a BigDecimal value.
      */
-    static GValue<BigDecimal> ofBigDecimal(final BigDecimal value) {
+    public static GValue<BigDecimal> ofBigDecimal(final BigDecimal value) {
         return new GValue<>(GType.BIG_DECIMAL, value);
     }
 
@@ -224,7 +224,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a long value.
      */
-    static GValue<Long> ofLong(final Long value) {
+    public static GValue<Long> ofLong(final Long value) {
         return new GValue<>(GType.LONG, value);
     }
 
@@ -238,7 +238,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a map value.
      */
-    static GValue<Map> ofMap(final Map value) {
+    public static GValue<Map> ofMap(final Map value) {
         return new GValue<>(GType.MAP, value);
     }
 
@@ -252,7 +252,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a list value.
      */
-    static <T> GValue<List<T>> ofList(final List<T> value) {
+    public static <T> GValue<List<T>> ofList(final List<T> value) {
         return new GValue<>(GType.LIST, value);
     }
 
@@ -266,7 +266,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a set value.
      */
-    static GValue<Set> ofSet(final Set value) {
+    public static GValue<Set> ofSet(final Set value) {
         return new GValue<>(GType.SET, value);
     }
 
@@ -280,7 +280,7 @@ public class GValue<V> implements Serializable {
     /**
      * Create a new {@code GValue} for a vertex value.
      */
-    static GValue<Vertex> ofVertex(final Vertex value) {
+    public static GValue<Vertex> ofVertex(final Vertex value) {
         return new GValue<>(GType.VERTEX, value);
     }
 

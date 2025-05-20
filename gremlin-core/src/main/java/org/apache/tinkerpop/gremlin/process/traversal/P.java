@@ -47,7 +47,7 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
     public GValueRegistry gValueRegistry;
 
     public P(final PBiPredicate<V, V> biPredicate, V value) {
-        parameterized = value instanceof GValue;
+        parameterized = value instanceof GValue || (value instanceof List && ((List) value).stream().anyMatch(v -> v instanceof GValue));
         if (parameterized) {
             gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
             value = ((GValue<V>) value).get();
@@ -239,22 +239,8 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
      * @since 3.0.0-incubating
      */
     public static <V> P<V> within(final V... values) {
-        //TODO:: Handle properly, record GValues
-        Object[] literals = Arrays.stream(values).map(val -> val instanceof GValue ? ((GValue<V>) val).get() : val).toArray();
-
-
-        final V[] v = null == literals ? (V[]) new Object[] { null } : (V[]) literals;
+        final V[] v = null == values ? (V[]) new Object[] { null } : (V[]) values;
         return P.within(Arrays.asList(v));
-    }
-
-    /**
-     * Determines if a value is within the specified list of values. If the array of arguments itself is {@code null}
-     * then the argument is treated as {@code Object[1]} where that single value is {@code null}.
-     *
-     * @since 3.8.0
-     */
-    public static <V> P<V> within(final GValue<V>... values) {
-        return within((V[])GValue.resolveToValues(values));
     }
 
     /**

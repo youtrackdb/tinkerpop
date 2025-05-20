@@ -199,6 +199,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.TraversalS
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.TreeSideEffectStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.DefaultTailContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.GValueContracting;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.StepContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Tree;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.WithOptions;
@@ -254,6 +255,11 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         @Override
         public default <E2> GraphTraversal.Admin<S, E2> addStep(final Step<?, E2> step) {
             return (GraphTraversal.Admin<S, E2>) Traversal.Admin.super.addStep((Step) step);
+        }
+
+        @Override
+        public default <E2> GraphTraversal.Admin<S, E2> addStep(final Step<?, E2> step, final StepContract contract) {
+            return (GraphTraversal.Admin<S, E2>) Traversal.Admin.super.addStep((Step) step, contract);
         }
 
         @Override
@@ -387,10 +393,13 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         // a single null is [null]
         final Object[] ids = null == vertexIdsOrElements ? new Object[] { null } : vertexIdsOrElements;
         this.asAdmin().getBytecode().addStep(Symbols.V, ids);
-        GraphStep<E, Vertex> step = new GraphStep<>(this.asAdmin(), Vertex.class, false, GValue.resolveToValues(GValue.ensureGValues(ids))); //TODO cleanup
-        this.asAdmin().getGValueManager().register(step, new DefaultElementIdsContract(GValue.ensureGValues(vertexIdsOrElements)));
+        final GraphStep<E, Vertex> step = new GraphStep<>(this.asAdmin(), Vertex.class, false, GValue.resolveToValues(GValue.ensureGValues(ids)));
 
-        return this.asAdmin().addStep(step);
+        // if there are no actual arguments here then don't register a contract because there can't be any GValues
+        if (ids.length == 0)
+            return this.asAdmin().addStep(step);
+        else
+            return this.asAdmin().addStep(step, new DefaultElementIdsContract(GValue.ensureGValues(ids)));
     }
 
     /**
@@ -405,10 +414,13 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         // a single null is [null]
         final Object[] ids = null == edgeIdsOrElements ? new Object[] { null } : edgeIdsOrElements;
         this.asAdmin().getBytecode().addStep(Symbols.E, ids);
-        GraphStep<E, Edge> step = new GraphStep<>(this.asAdmin(), Edge.class, false, GValue.resolveToValues(GValue.ensureGValues(ids)));
-        this.asAdmin().getGValueManager().register(step, new DefaultElementIdsContract(GValue.ensureGValues(ids)));
+        final GraphStep<E, Edge> step = new GraphStep<>(this.asAdmin(), Edge.class, false, GValue.resolveToValues(GValue.ensureGValues(ids)));
 
-        return this.asAdmin().addStep(step);
+        // if there are no actual arguments here then don't register a contract because there can't be any GValues
+        if (ids.length == 0)
+            return this.asAdmin().addStep(step);
+        else
+            return this.asAdmin().addStep(step, new DefaultElementIdsContract(GValue.ensureGValues(ids)));
     }
 
     /**
@@ -450,8 +462,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Vertex> to(final Direction direction, final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.to, direction, edgeLabels);
         VertexStep<Vertex> step = new VertexStep<>(this.asAdmin(), Vertex.class, direction, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<>(edgeLabels));
     }
 
     /**
@@ -491,10 +502,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Vertex> out(final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.out, edgeLabels);
         VertexStep<Vertex> step = new VertexStep<>(this.asAdmin(), Vertex.class, Direction.OUT, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
-
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<>(edgeLabels));
     }
 
     /**
@@ -534,10 +542,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Vertex> in(final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.in, edgeLabels);
         VertexStep<Vertex> step = new VertexStep<>(this.asAdmin(), Vertex.class, Direction.IN, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
-
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<>(edgeLabels));
     }
 
     /**
@@ -576,10 +581,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Vertex> both(final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.both, edgeLabels);
         VertexStep<Vertex> step = new VertexStep<>(this.asAdmin(), Vertex.class, Direction.BOTH, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<>(edgeLabels));
-
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<>(edgeLabels));
     }
 
     /**
@@ -622,10 +624,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Edge> toE(final Direction direction, final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.toE, direction, edgeLabels);
         VertexStep<Edge> step = new VertexStep<>(this.asAdmin(), Edge.class, direction, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
-
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<>(edgeLabels));
     }
 
     /**
@@ -664,8 +663,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Edge> outE(final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.outE, edgeLabels);
         VertexStep step = new VertexStep<>(this.asAdmin(), Edge.class, Direction.OUT, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<>(edgeLabels));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<>(edgeLabels));
     }
 
     /**
@@ -705,8 +703,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Edge> inE(final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.inE, edgeLabels);
         VertexStep<Edge> step = new VertexStep<>(this.asAdmin(), Edge.class, Direction.IN, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<>(edgeLabels));
     }
 
     /**
@@ -745,8 +742,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Edge> bothE(final GValue<String>... edgeLabels) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.bothE, edgeLabels);
         VertexStep<Edge> step = new VertexStep<>(this.asAdmin(), Edge.class, Direction.BOTH, Arrays.stream(GValue.resolveToValues(edgeLabels)).toArray(String[]::new));
-        this.asAdmin().getGValueManager().register(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultEdgeLabelContract<GValue<String>>(edgeLabels));
     }
 
     /**
@@ -1390,8 +1386,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         if (null == vertexLabel || null == vertexLabel.get()) throw new IllegalArgumentException("vertexLabel cannot be null");
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.addV, vertexLabel);
         AddVertexStep<Vertex> step = new AddVertexStep<>(this.asAdmin(), vertexLabel.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultAddVertexContract<>(vertexLabel));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultAddVertexContract<>(vertexLabel));
     }
 
     /**
@@ -1464,8 +1459,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Vertex> mergeV(final GValue<Map<?, ?>> searchCreate) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.mergeV, searchCreate);
         final MergeVertexStep<S> step = new MergeVertexStep(this.asAdmin(), false, searchCreate.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultMergeElementContract<>(searchCreate));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultMergeElementContract<>(searchCreate));
     }
 
     /**
@@ -1520,8 +1514,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         // get a construction time exception if the Map is bad
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.mergeE, searchCreate);
         final MergeEdgeStep<S> step = new MergeEdgeStep(this.asAdmin(), false, searchCreate.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultMergeElementContract<>(searchCreate));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultMergeElementContract<>(searchCreate));
     }
 
     /**
@@ -1560,8 +1553,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, Edge> addE(final GValue<String> edgeLabel) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.addE, edgeLabel);
         AddEdgeStep<Edge> step = new AddEdgeStep<>(this.asAdmin(), edgeLabel.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultAddEdgeContract<>(edgeLabel));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultAddEdgeContract<>(edgeLabel));
     }
 
     /**
@@ -1623,7 +1615,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
 
         //TODO unified interface
         if (prev instanceof AddEdgeStep) {
-            ((DefaultAddEdgeContract<?, GValue<Vertex>, ?, ?>)((AddEdgeStep<?>) prev).getGValueContract()).addFrom(fromVertex);//TODO:: Update GValueManager.gValueRegistry
+            ((DefaultAddEdgeContract<?, GValue<Vertex>, ?, ?>)((AddEdgeStep<?>) prev).getGValueContract()).addFrom(fromVertex);  //TODO:: Update GValueManager.gValueRegistry
         } else if (prev instanceof AddEdgeStartStep) {
             ((DefaultAddEdgeContract<?, GValue<Vertex>, ?, ?>)((AddEdgeStartStep) prev).getGValueContract()).addFrom(fromVertex);
         }
@@ -1801,8 +1793,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     default <E> GraphTraversal<S, E> call(final String service, final GValue<Map<?,?>> params) {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.call, service, params);
         final CallStep<S,E> step = new CallStep<>(this.asAdmin(), false, service, params.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultCallContract<>(params));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultCallContract<>(params));
     }
 
     /**
@@ -1856,8 +1847,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.call, service, params, childTraversal);
         final CallStep<S,E> step = null == childTraversal ? new CallStep(this.asAdmin(), false, service, params.get()) :
                 new CallStep(this.asAdmin(), false, service, params.get(), childTraversal.asAdmin());
-        this.asAdmin().getGValueManager().register(step, new DefaultCallContract<>(params));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultCallContract<>(params));
     }
 
     /**
@@ -3072,7 +3062,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, E> is(final P<E> predicate) {
         this.asAdmin().getBytecode().addStep(Symbols.is, predicate);
 
-        IsStep<E> step = new IsStep<>(this.asAdmin(), predicate);
+        final IsStep<E> step = new IsStep<>(this.asAdmin(), predicate);
 
         if (predicate.isParameterized()) {
             this.asAdmin().getGValueManager().register(step, predicate);
@@ -3090,8 +3080,8 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.0.0-incubating
      */
     public default GraphTraversal<S, E> is(final Object value) {
-        this.asAdmin().getBytecode().addStep(Symbols.is, value);
-        return this.asAdmin().addStep(new IsStep<>(this.asAdmin(), value instanceof P ? (P<E>) value : P.eq((E) value)));
+        final P<E> p = value instanceof P ? (P<E>) value : P.eq((E) value);
+        return this.is(p);
     }
 
     /**
@@ -3147,12 +3137,8 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default GraphTraversal<S, E> range(final GValue<Long> low, final GValue<Long> high) {
         this.asAdmin().getBytecode().addStep(Symbols.range, low, high);
-
-        RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), low.get(), high.get());
-
-        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract(low, high));
-
-        return this.asAdmin().addStep(step);
+        final RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), low.get(), high.get());
+        return this.asAdmin().addStep(step, new DefaultRangeContract(low, high));
     }
 
     /**
@@ -3189,13 +3175,11 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default <E2> GraphTraversal<S, E2> range(final Scope scope, final GValue<Long> low, final GValue<Long> high) {
         this.asAdmin().getBytecode().addStep(Symbols.range, scope, low, high);
 
-        Step<?, E2> step = scope.equals(Scope.global)
+        final Step<?, E2> step = scope.equals(Scope.global)
                 ? new RangeGlobalStep<>(this.asAdmin(), low.get(), high.get())
                 : new RangeLocalStep<>(this.asAdmin(), low.get(), high.get());
 
-        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract(low, high));
-
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultRangeContract(low, high));
     }
 
     /**
@@ -3224,8 +3208,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, E> limit(final GValue<Long> limit) {
         this.asAdmin().getBytecode().addStep(Symbols.limit, limit);
         RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), 0, limit.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(null, limit)); //TODO is null correct here?
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultRangeContract<>(GValue.ofLong(0L), limit));
     }
 
     /**
@@ -3258,13 +3241,11 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default <E2> GraphTraversal<S, E2> limit(final Scope scope, final GValue<Long> limit) {
         this.asAdmin().getBytecode().addStep(Symbols.limit, scope, limit);
 
-        Step<?, E2> step = scope.equals(Scope.global)
+        final Step<?, E2> step = scope.equals(Scope.global)
                 ? new RangeGlobalStep<>(this.asAdmin(), 0, limit.get())
                 : new RangeLocalStep<>(this.asAdmin(), 0, limit.get());
 
-        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(null, limit)); //TODO is null correct?
-
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultRangeContract<>(GValue.ofLong(0L), limit));
     }
 
     /**
@@ -3306,8 +3287,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, E> tail(final GValue<Long> limit) {
         this.asAdmin().getBytecode().addStep(Symbols.tail, limit);
         TailGlobalStep<E> step = new TailGlobalStep<>(this.asAdmin(), limit.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultTailContract<>(limit));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultTailContract<>(limit));
     }
 
     /**
@@ -3359,8 +3339,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         Step<?, E2> step = scope.equals(Scope.global)
                 ? new TailGlobalStep<>(this.asAdmin(), limit.get())
                 : new TailLocalStep<>(this.asAdmin(), limit.get());
-        this.asAdmin().getGValueManager().register(step, new DefaultTailContract<>(limit));
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultTailContract<>(limit));
     }
 
     /**
@@ -3387,8 +3366,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default GraphTraversal<S, E> skip(final GValue<Long> skip) {
         this.asAdmin().getBytecode().addStep(Symbols.skip, skip);
         RangeGlobalStep<E> step = new RangeGlobalStep<>(this.asAdmin(), skip.get(), -1);
-        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(skip, null)); //TODO is null correct?
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultRangeContract<>(skip, GValue.ofLong(-1L)));
     }
 
     /**
@@ -3419,13 +3397,11 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     public default <E2> GraphTraversal<S, E2> skip(final Scope scope, final GValue<Long> skip) {
         this.asAdmin().getBytecode().addStep(Symbols.skip, scope, skip);
 
-        Step<?, E2> step = scope.equals(Scope.global)
+        final Step<?, E2> step = scope.equals(Scope.global)
                 ? new RangeGlobalStep<>(this.asAdmin(), skip.get(), -1)
                 : new RangeLocalStep<>(this.asAdmin(), skip.get(), -1);
 
-        this.asAdmin().getGValueManager().register(step, new DefaultRangeContract<>(skip, null)); //TODO is null correct?
-
-        return this.asAdmin().addStep(step);
+        return this.asAdmin().addStep(step, new DefaultRangeContract<>(skip, GValue.ofLong(-1L)));
     }
 
     /**

@@ -19,6 +19,7 @@
 package org.apache.tinkerpop.gremlin.process.traversal.util;
 
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.TraversalVertexProgramStep;
+import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -45,6 +46,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectOneStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.StartStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.StepContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.BulkSet;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -185,6 +187,27 @@ public final class TraversalHelper {
         final int i;
         traversal.removeStep(i = stepIndex(removeStep, traversal));
         traversal.addStep(i, insertStep);
+    }
+
+    /**
+     * Moves a step to a new position while maintaining any {@link StepContract} reference.
+     *
+     * @param stepToMove the step to move
+     * @param indexToMoveTo the index in the traversal to move it to
+     * @param traversal the traversal to move the step in which must be the same as the one assigned to the step
+     */
+    public static <S, E> void moveStep(final Step<S, E> stepToMove, final int indexToMoveTo, final Traversal.Admin<?, ?> traversal) {
+        if (traversal != stepToMove.getTraversal())
+            throw new IllegalStateException("Traversals do not match");
+
+        final GValueManager gValueManager = traversal.getGValueManager();
+        final StepContract stepContract = gValueManager.getStepContract(stepToMove);
+        traversal.removeStep(stepToMove);
+        if (null == stepContract)
+            traversal.addStep(indexToMoveTo, stepToMove);
+        else
+            traversal.addStep(indexToMoveTo, stepToMove, stepContract);
+
     }
 
     public static <S, E> Step<?, E> insertTraversal(final Step<?, S> previousStep, final Traversal.Admin<S, E> insertTraversal, final Traversal.Admin<?, ?> traversal) {
@@ -755,24 +778,6 @@ public final class TraversalHelper {
             }
         }
         return false;
-    }
-
-    /**
-     * @deprecated As of release 3.5.2, not replaced as strategies are not applied in this fashion after 3.5.0
-     */
-    @Deprecated
-    public static void applySingleLevelStrategies(final Traversal.Admin<?, ?> parentTraversal,
-                                                  final Traversal.Admin<?, ?> childTraversal,
-                                                  final Class<? extends TraversalStrategy> stopAfterStrategy) {
-        childTraversal.setStrategies(parentTraversal.getStrategies());
-        childTraversal.setSideEffects(parentTraversal.getSideEffects());
-        parentTraversal.getGraph().ifPresent(childTraversal::setGraph);
-        for (final TraversalStrategy<?> strategy : parentTraversal.getStrategies()) {
-            strategy.apply(childTraversal);
-            strategy.updateGValue(childTraversal);
-            if (null != stopAfterStrategy && stopAfterStrategy.isInstance(strategy))
-                break;
-        }
     }
 
     /**

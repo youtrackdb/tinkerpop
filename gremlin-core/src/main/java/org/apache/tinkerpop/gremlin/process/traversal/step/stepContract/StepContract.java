@@ -18,6 +18,6 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step.stepContract;
 
-public interface StepContract{
+public interface StepContract extends Cloneable {
 
 }
