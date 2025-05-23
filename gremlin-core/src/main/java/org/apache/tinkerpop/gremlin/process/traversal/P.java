@@ -43,23 +43,27 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
     protected V value;
     protected V originalValue;
 
-    public boolean parameterized;
     public GValueRegistry gValueRegistry;
 
     public P(final PBiPredicate<V, V> biPredicate, V value) {
-        parameterized = value instanceof GValue || (value instanceof List && ((List) value).stream().anyMatch(v -> v instanceof GValue));
-        if (parameterized) {
-            if (value instanceof GValue) {
-                gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
-                value = ((GValue<V>) value).get();
-            } else {
-                gValueRegistry = new GValueRegistry(this, GValue.ensureGValues(((List) value).toArray()));
-            }
+        if (value instanceof GValue) {
+            gValueRegistry = new GValueRegistry(this, (GValue<V>) value);
+            this.value = ((GValue<V>) value).get();
+        } else if (value instanceof List && ((List) value).stream().anyMatch(v -> v instanceof GValue)) {
+            gValueRegistry = new GValueRegistry(this, GValue.ensureGValues(((List) value).toArray()));
+            this.value = (V) Arrays.asList(GValue.resolveToValues(GValue.ensureGValues(((List) value).toArray())));
         } else {
             gValueRegistry = new GValueRegistry();
+            this.value = value;
         }
-        this.value = value;
-        this.originalValue = value;
+        this.originalValue = this.value;
+        this.biPredicate = biPredicate;
+    }
+
+    public P(final PBiPredicate<V, V> biPredicate, GValue<V> value) {
+        gValueRegistry = new GValueRegistry(this, value);
+        this.value = value.get();
+        this.originalValue = value.get();
         this.biPredicate = biPredicate;
     }
 
@@ -93,12 +97,7 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
 
     @Override
     public boolean test(final V testValue) {
-        // this might be a bunch of GValue that need to be resolved. zomg
-        if (this.value instanceof List) {
-            return this.biPredicate.test(testValue, (V) ((List) this.value).stream().map(GValue::valueOf).collect(Collectors.toList()));
-        } else {
-            return this.biPredicate.test(testValue, (V) GValue.valueOf(this.value));
-        }
+        return this.biPredicate.test(testValue, this.value);
     }
 
     @Override
@@ -300,34 +299,40 @@ public class P<V> implements Predicate<V>, Serializable, Cloneable {
     }
 
     public boolean isParameterized() {
-        return parameterized;
+        return !gValueRegistry.isEmpty();
     }
 
-    protected class GValueRegistry implements Serializable {
-        private Map<P, GValue> GValueRegistry = new IdentityHashMap<>();
+    public GValueRegistry getGValueRegistry() {
+        return gValueRegistry;
+    }
 
-        public GValueRegistry() {};
+    protected class GValueRegistry<T> implements Serializable {
+        private Map<P, GValue<T>> gValueRegistry = new IdentityHashMap<>();
 
-        public GValueRegistry(P predicate, GValue gValue) {
-            GValueRegistry.put(predicate, gValue);
+        public GValueRegistry() {}
+
+        public GValueRegistry(P predicate, GValue<T> gValue) {
+            gValueRegistry.put(predicate, gValue);
         }
 
-        public GValueRegistry(P predicate, GValue[] gValues) {
-            for (GValue gValue : gValues) {
+        public GValueRegistry(P predicate, GValue<T>[] gValues) {
+            for (GValue<T> gValue : gValues) {
                 if (gValue.isVariable()) {
-                    GValueRegistry.put(predicate, gValue);
+                    gValueRegistry.put(predicate, gValue);
                 }
             }
         }
 
-        public GValueRegistry(GValueRegistry... registries) {
-            for (final GValueRegistry registry : registries) {
-                this.merge(registry);
-            }
+        public void addAll(final GValueRegistry other) {
+            this.gValueRegistry.putAll(other.gValueRegistry);
         }
 
-        public void merge(final GValueRegistry other) {
-            this.GValueRegistry.putAll(other.GValueRegistry);
+        public boolean isEmpty(){
+            return this.gValueRegistry.isEmpty();
+        }
+
+        public Collection<GValue<T>> getGValues() {
+            return gValueRegistry.values();
         }
     }
 }

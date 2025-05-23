@@ -2449,6 +2449,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.0.0-incubating
      */
     public default GraphTraversal<S, E> filter(final Predicate<Traverser<E>> predicate) {
+        if (predicate != null && predicate instanceof P && ((P<Traverser<E>>) predicate).isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by filter()");
+        }
         this.asAdmin().getBytecode().addStep(Symbols.filter, predicate);
         return this.asAdmin().addStep(new LambdaFilterStep<>(this.asAdmin(), predicate));
     }
@@ -2559,6 +2562,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.0.0-incubating
      */
     public default GraphTraversal<S, E> where(final String startKey, final P<String> predicate) {
+        if (predicate != null && predicate.isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by where()");
+        }
         this.asAdmin().getBytecode().addStep(Symbols.where, startKey, predicate);
         return this.asAdmin().addStep(new WherePredicateStep<>(this.asAdmin(), Optional.ofNullable(startKey), predicate));
     }
@@ -2574,6 +2580,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.0.0-incubating
      */
     public default GraphTraversal<S, E> where(final P<String> predicate) {
+        if (predicate != null && predicate.isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by where()");
+        }
         this.asAdmin().getBytecode().addStep(Symbols.where, predicate);
         return this.asAdmin().addStep(new WherePredicateStep<>(this.asAdmin(), Optional.empty(), predicate));
     }
@@ -3006,6 +3015,8 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         // if calling hasKey(null), the likely use the caller is going for is not a "no predicate" but a eq(null)
         if (null == predicate) {
             return hasKey((String) null);
+        } else if (predicate.isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by hasKey()");
         } else {
             this.asAdmin().getBytecode().addStep(Symbols.hasKey, predicate);
             return TraversalHelper.addHasContainer(this.asAdmin(), new HasContainer(T.key.getAccessor(), predicate));
@@ -3080,7 +3091,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         final IsStep<E> step = new IsStep<>(this.asAdmin(), predicate);
 
         if (predicate.isParameterized()) {
-            this.asAdmin().getGValueManager().register(step, predicate);
+            this.asAdmin().getGValueManager().register(step, step);
         }
 
         return this.asAdmin().addStep(step);
@@ -3100,7 +3111,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
         final IsStep<E> step = new IsStep<>(this.asAdmin(), predicate);
 
         if (predicate.isParameterized()) {
-            this.asAdmin().getGValueManager().register(step, predicate);
+            this.asAdmin().getGValueManager().register(step, step);
         }
 
         return this.asAdmin().addStep(step);
@@ -3515,6 +3526,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.7.1
      */
     public default <S2> GraphTraversal<S, E> all(final P<S2> predicate) {
+        if (predicate != null && predicate.isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by all()"); //TODO:: should this be supported?
+        }
         this.asAdmin().getBytecode().addStep(Symbols.all, predicate);
         return this.asAdmin().addStep(new AllStep<>(this.asAdmin(), predicate));
     }
@@ -3528,6 +3542,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.7.1
      */
     public default <S2> GraphTraversal<S, E> any(final P<S2> predicate) {
+        if (predicate != null && predicate.isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by any()"); //TODO:: should this be supported?
+        }
         this.asAdmin().getBytecode().addStep(Symbols.any, predicate);
         return this.asAdmin().addStep(new AnyStep<>(this.asAdmin(), predicate));
     }
@@ -4045,6 +4062,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default <E2> GraphTraversal<S, E2> choose(final Predicate<E> choosePredicate,
                                                      final Traversal<?, E2> trueChoice, final Traversal<?, E2> falseChoice) {
+        if (choosePredicate instanceof P && ((P<E>) choosePredicate).isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by choose()");
+        }
         this.asAdmin().getBytecode().addStep(Symbols.choose, choosePredicate, trueChoice, falseChoice);
         return this.asAdmin().addStep(new ChooseStep<E, E2, Boolean>(this.asAdmin(), (Traversal.Admin<E, ?>) __.filter(new PredicateTraverser<>(choosePredicate)), (Traversal.Admin<E, E2>) trueChoice, (Traversal.Admin<E, E2>) falseChoice));
     }
@@ -4061,6 +4081,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      */
     public default <E2> GraphTraversal<S, E2> choose(final Predicate<E> choosePredicate,
                                                      final Traversal<?, E2> trueChoice) {
+        if (choosePredicate instanceof P && ((P<E>) choosePredicate).isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by choose()");
+        }
         this.asAdmin().getBytecode().addStep(Symbols.choose, choosePredicate, trueChoice);
         return this.asAdmin().addStep(new ChooseStep<E, E2, Boolean>(this.asAdmin(), (Traversal.Admin<E, ?>) __.filter(new PredicateTraverser<>(choosePredicate)), (Traversal.Admin<E, E2>) trueChoice, (Traversal.Admin<E, E2>) __.identity()));
     }
@@ -4154,6 +4177,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.0.0-incubating
      */
     public default GraphTraversal<S, E> emit(final Predicate<Traverser<E>> emitPredicate) {
+        if (emitPredicate != null && emitPredicate instanceof P && ((P<Traverser<E>>) emitPredicate).isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by emit()");
+        }
         this.asAdmin().getBytecode().addStep(Symbols.emit, emitPredicate);
         return RepeatStep.addEmitToTraversal(this, (Traversal.Admin<E, ?>) __.filter(emitPredicate));
     }
@@ -4192,6 +4218,9 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.0.0-incubating
      */
     public default GraphTraversal<S, E> until(final Predicate<Traverser<E>> untilPredicate) {
+        if (untilPredicate != null && untilPredicate instanceof P && ((P<Traverser<E>>) untilPredicate).isParameterized()) {
+            throw new IllegalArgumentException("Parameterized predicates are not supported by until()");
+        }
         this.asAdmin().getBytecode().addStep(Symbols.until, untilPredicate);
         return RepeatStep.addUntilToTraversal(this, (Traversal.Admin<E, ?>) __.filter(untilPredicate));
     }

@@ -18,14 +18,18 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step;
 
+import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.StepContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface HasContainerHolder {
+public interface HasContainerHolder extends StepContract {
 
     public List<HasContainer> getHasContainers();
 
@@ -33,5 +37,9 @@ public interface HasContainerHolder {
 
     public default void removeHasContainer(final HasContainer hasContainer) {
         throw new UnsupportedOperationException("The holder does not support container removal: " + this.getClass().getCanonicalName());
+    }
+
+    public default Collection<P<?>> getPredicates() {
+        return getHasContainers().stream().map(p -> p.getPredicate()).collect(Collectors.toList());
     }
 }

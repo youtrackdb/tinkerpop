@@ -34,12 +34,11 @@ public abstract class ConnectiveP<V> extends P<V> {
     protected List<P<V>> predicates = new ArrayList<>();
 
     public ConnectiveP(final List<P<V>> predicates) {
-        super(null, null);
+        super(null, (V) null);
 
         for (P<V> p : predicates) {
-            if (p.parameterized) {
-                this.parameterized = true;
-                this.gValueRegistry.merge(p.gValueRegistry);
+            if (p.isParameterized()) {
+                this.gValueRegistry.addAll(p.gValueRegistry);
             }
         }
 

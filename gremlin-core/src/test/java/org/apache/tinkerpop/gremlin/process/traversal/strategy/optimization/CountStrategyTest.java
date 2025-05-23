@@ -223,9 +223,8 @@ public class CountStrategyTest {
                     {__.out().count().is(gte(GValue.ofInteger("x", 2)))},
                     {__.out().count().is(inside(GValue.ofInteger("x", 2), GValue.ofInteger("y", 4)))},
                     {__.out().count().is(outside(GValue.ofInteger("x", 2), GValue.ofInteger("y", 4)))},
-                    // TODO: within/out() are broken for GValue - not initializing properly in the P constructor to preserve the GValue and missing the chance to mark as parameterized
-//                    {__.out().count().is(within(GValue.ofInteger("x", 2), GValue.ofInteger("y", 6), GValue.ofInteger("z", 4)))},
-//                    {__.out().count().is(without(GValue.ofInteger("x", 2), GValue.ofInteger("y", 6), GValue.ofInteger("z", 4)))},
+                    {__.out().count().is(within(GValue.ofInteger("x", 2), GValue.ofInteger("y", 6), GValue.ofInteger("z", 4)))},
+                    {__.out().count().is(without(GValue.ofInteger("x", 2), GValue.ofInteger("y", 6), GValue.ofInteger("z", 4)))},
                     {__.map(__.count().is(GValue.of("x", 0)))},
                     {__.flatMap(__.count().is(GValue.of("x", 0)))},
                     {__.flatMap(__.count().is(GValue.of("x", 0))).as("a")},

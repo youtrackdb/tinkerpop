@@ -791,8 +791,16 @@ public final class TraversalHelper {
     public static <T extends Traversal.Admin<?, ?>> T addHasContainer(final T traversal, final HasContainer hasContainer) {
         if (traversal.getEndStep() instanceof HasContainerHolder) {
             ((HasContainerHolder) traversal.getEndStep()).addHasContainer(hasContainer);
+            if (hasContainer.getPredicate().isParameterized()) {
+                traversal.getGValueManager().register(traversal.getEndStep(), (HasContainerHolder) traversal.getEndStep());
+            }
             return traversal;
-        } else
-            return (T) traversal.addStep(new HasStep<>(traversal, hasContainer));
+        } else {
+            HasStep<?> step = new HasStep<>(traversal, hasContainer);
+            if (hasContainer.getPredicate().isParameterized()) {
+                traversal.getGValueManager().register(step, step);
+            }
+            return (T) traversal.addStep(step);
+        }
     }
 }
