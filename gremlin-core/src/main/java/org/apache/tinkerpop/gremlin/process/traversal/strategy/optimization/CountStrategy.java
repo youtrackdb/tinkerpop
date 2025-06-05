@@ -149,9 +149,16 @@ public final class CountStrategy extends AbstractTraversalStrategy<TraversalStra
                 }
 
                 if (highRange != null) {
+                    // if this strategy decides it can add a limit() then it means we've accessed the GValue for
+                    // logic to reach this point and now intend to insert a new step based on that logic. by doing
+                    // this, we nullify the possibility of using that GValue for downstream optimizations as it
+                    // would tie the dynamic GValue to a statically constructed literal (i.e. the highRange) that
+                    // only applies for this current strategy application.
+                    traversal.getGValueManager().remove(isStep);
+
                     if (useNotStep || dismissCountIs) {
-                        traversal.asAdmin().removeStep(isStep); // IsStep
-                        traversal.asAdmin().removeStep(curr); // CountStep
+                        TraversalHelper.removeStep(isStep, traversal); // IsStep
+                        TraversalHelper.removeStep(curr, traversal); // CountStep
                         size -= 2;
                         if (!dismissCountIs) {
                             if (parent instanceof ConnectiveStep) {
@@ -174,7 +181,7 @@ public final class CountStrategy extends AbstractTraversalStrategy<TraversalStra
                                         inner.addStep(0, prev);
                                         if (pp instanceof EmptyStep || pp instanceof GraphStep ||
                                                 !(prev instanceof FilterStep || prev instanceof SideEffectStep)) break;
-                                        traversal.removeStep(prev);
+                                        TraversalHelper.removeStep(prev, traversal);
                                         prev = pp;
                                         size--;
                                     }
@@ -195,12 +202,6 @@ public final class CountStrategy extends AbstractTraversalStrategy<TraversalStra
                             }
                         }
                     } else {
-                        // if this strategy decides it can add a limit() then it means we've accessed the GValue for
-                        // logic to reach this point and now intend to insert a new step based on that logic. by doing
-                        // this, we nullify the possibility of using that GValue for downstream optimizations as it
-                        // would tie the dynamic GValue to a statically constructed literal (i.e. the highRange) that
-                        // only applies for this current strategy application.
-                        traversal.getGValueManager().remove(isStep);
                         TraversalHelper.insertBeforeStep(new RangeGlobalStep<>(traversal, 0L, highRange < 0 ? 0 : highRange), curr, traversal);
                     }
                     i++;

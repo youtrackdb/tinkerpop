@@ -69,6 +69,11 @@ public abstract class AbstractRemoteTraversal<S,E> implements RemoteTraversal<S,
     }
 
     @Override
+    public void setGValueManager(final GValueManager gValueManager) {
+        throw new UnsupportedOperationException("Remote traversals do not support this method");
+    }
+
+    @Override
     public List<Step> getSteps() {
         throw new UnsupportedOperationException("Remote traversals do not support this method");
     }

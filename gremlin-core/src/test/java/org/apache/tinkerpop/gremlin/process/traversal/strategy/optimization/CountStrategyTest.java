@@ -30,6 +30,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.GValueManagerVeri
 import org.apache.tinkerpop.gremlin.process.traversal.translator.GroovyTranslator;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
+import org.apache.tinkerpop.gremlin.util.CollectionUtil;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -37,6 +38,7 @@ import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.tinkerpop.gremlin.process.traversal.P.eq;
 import static org.apache.tinkerpop.gremlin.process.traversal.P.gt;
@@ -227,7 +229,6 @@ public class CountStrategyTest {
                     {__.out().count().is(without(GValue.ofInteger("x", 2), GValue.ofInteger("y", 6), GValue.ofInteger("z", 4)))},
                     {__.map(__.count().is(GValue.of("x", 0)))},
                     {__.flatMap(__.count().is(GValue.of("x", 0)))},
-                    {__.flatMap(__.count().is(GValue.of("x", 0))).as("a")},
                     {__.filter(__.count().is(GValue.of("x", 0))).as("a")},
                     {__.filter(__.count().is(GValue.of("x", 0)))},
                     {__.sideEffect(__.count().is(GValue.of("x", 0)))},
@@ -235,7 +236,7 @@ public class CountStrategyTest {
                     {__.count().is(GValue.of("x", 0)).store("x")},
                     {__.repeat(__.out()).until(__.outE().count().is(GValue.of("x", 0)))},
                     {__.repeat(__.out()).until(__.out().out().values("name").count().is(GValue.of("x", 0)))},
-                    {__.repeat(__.out()).until(__.out().out().properties("age").has("x").count().is(GValue.of("x", 0)))},
+                    {__.repeat(__.out()).until(__.out().out().properties("age").has("x").count().is(GValue.of("x", 0)))}, /// //////////
                     {__.repeat(__.out()).emit(__.outE().count().is(GValue.of("x", 0)))},
                     {__.where(__.outE().hasLabel("created").count().is(GValue.of("x", 0)))},
                     {__.where(__.out().outE().hasLabel("created").count().is(GValue.of("x", 0)))},
@@ -290,14 +291,40 @@ public class CountStrategyTest {
 
         @Test
         public void shouldMaintainGValueManagerState() {
-            GValueManagerVerifier.verify(traversal, CountStrategy.instance()).
-                    beforeApplying().
-                    stepsOfClassAreParameterized(true, IsStep.class);
-
             // After applying strategies, all IsSteps should have no GValue references
             GValueManagerVerifier.verify(traversal, CountStrategy.instance()).
+                    beforeApplying().
+                    stepsOfClassAreParameterized(true, IsStep.class).
                     afterApplying().
                     managerIsEmpty();
+        }
+    }
+
+    /**
+     * Tests that {@link GValueManager} is properly maintaining state in cases strategy logic does not depend on
+     * the content of the {@link GValue}.
+     */
+    @RunWith(Parameterized.class)
+    public static class GValuePreservedSinceStrategyWasNotInformedByGValueTest {
+
+        @Parameterized.Parameter(value = 0)
+        public Traversal.Admin<?, ?> traversal;
+
+        @Parameterized.Parameters(name = "{0}")
+        public static Iterable<Object[]> generateTestParameters() {
+            return Arrays.asList(new Object[][]{
+                    {__.flatMap(__.count().is(GValue.of("x", 0))).as("a")},
+            });
+        }
+
+        @Test
+        public void shouldMaintainGValueManagerState() {
+            // After applying strategies, all IsSteps should have no GValue references
+            GValueManagerVerifier.verify(traversal, CountStrategy.instance()).
+                    beforeApplying().
+                    stepsOfClassAreParameterized(true, IsStep.class).
+                    afterApplying().
+                    variablesArePreserved();
         }
     }
 }

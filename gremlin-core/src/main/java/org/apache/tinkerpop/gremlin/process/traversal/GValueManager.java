@@ -19,6 +19,7 @@
 package org.apache.tinkerpop.gremlin.process.traversal;
 
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
+import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.AddEdgeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.AddVertexContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.CallContract;
@@ -34,13 +35,15 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.TailCont
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The {@code GValueManager} class is responsible for managing the state of {@link GValue} instances and their
@@ -59,7 +62,7 @@ public final class GValueManager implements Serializable, Cloneable {
         this(Collections.EMPTY_MAP, Collections.EMPTY_MAP);
     }
 
-    private GValueManager(Map<String, GValue> gValueRegistry, Map<Step, StepContract> stepRegistry) {
+    private GValueManager(final Map<String, GValue> gValueRegistry, final Map<Step, StepContract> stepRegistry) {
         this.gValueRegistry.putAll(gValueRegistry);
         this.stepRegistry.putAll(stepRegistry);
     }
@@ -83,29 +86,13 @@ public final class GValueManager implements Serializable, Cloneable {
      * extraction logic for each contract type. If a contract type is found that is not supported, an
      * {@link IllegalArgumentException} is thrown.
      */
-    public void lock() {
+    public synchronized void lock() {
         // can only lock once so if already locked, just return.
         if (locked) return;
+        locked = true;
 
         for (StepContract contract : stepRegistry.values()) {
             registerGValues(extractGValues(contract));
-        }
-
-        locked = true;
-    }
-
-    private void registerGValues(Collection<GValue<?>> gValues) {
-        for (GValue<?> gValue : gValues) {
-            if (gValue.getName() != null) {
-                gValueRegistry.put(gValue.getName(), gValue);
-            }
-        }
-    }
-
-    private void removeGValues(Collection<GValue<?>> gValues) {
-        for (GValue<?> gValue : gValues) {
-            gValueRegistry.remove(gValue.getName(), gValue);
-            // TODO:: cascade to other steps
         }
     }
 
@@ -116,11 +103,12 @@ public final class GValueManager implements Serializable, Cloneable {
         return locked;
     }
 
-    public void merge(final GValueManager other) {
+    public void mergeInto(final GValueManager other) {
         if (this.locked) throw Traversal.Exceptions.traversalIsLocked();
+
         //TODO deal with conflicts
-        gValueRegistry.putAll(other.gValueRegistry);
-        stepRegistry.putAll(other.stepRegistry);
+        other.gValueRegistry.putAll(gValueRegistry);
+        other.stepRegistry.putAll(stepRegistry);
     }
 
     /**
@@ -158,12 +146,69 @@ public final class GValueManager implements Serializable, Cloneable {
 
     /**
      * Gets the set of variable names used in this traversal. Note that this set won't be consistent until
-     * {@link #lock()} is called first.
+     * {@link #lock()} is called first. Calls to this method prior to locking will force iteration through traversal
+     * steps to real-time gather then variable names.
      */
     public Set<String> variableNames() {
-        return Collections.unmodifiableSet(gValueRegistry.keySet());
+        if (locked) {
+            return Collections.unmodifiableSet(gValueRegistry.keySet());
+        } else {
+            return Collections.unmodifiableSet(gValues().stream().map(GValue::getName).collect(Collectors.toSet()));
+        }
     }
 
+    /**
+     * Gets the set of {@link GValue} objects used in this traversal. Note that this set won't be consistent until
+     * {@link #lock()} is called first. Calls to this method prior to locking will force iteration through traversal
+     * steps to real-time gather them.
+     */
+    public Set<GValue> gValues() {
+        if (locked) {
+            return Collections.unmodifiableSet(new HashSet<>(gValueRegistry.values()));
+        } else {
+            final Set<GValue> gvalues = new HashSet<>();
+            for (StepContract contract : stepRegistry.values()) {
+                extractGValues(contract).stream().
+                        filter(gv -> gv.getName() != null).forEach(gvalues::add);
+            }
+            return Collections.unmodifiableSet(gvalues);
+        }
+    }
+
+    /**
+     * Recursively collect {@link Step} to {@link GValue} mappings from the specified traversal and its children.
+     */
+    public Map<Step, Set<GValue>> gatherStepGValues(final Traversal.Admin<?, ?> traversal) {
+        return gatherStepGValues(traversal, null);
+    }
+
+    private Map<Step, Set<GValue>> gatherStepGValues(final Traversal.Admin<?, ?> traversal, final Map<Step, Set<GValue>> result) {
+        final GValueManager manager = traversal.getGValueManager();
+        final Map<Step, Set<GValue>> r = null == result ? new HashMap<>() : result;
+
+        for (Step step : traversal.getSteps()) {
+            if (manager.isParameterized(step)) {
+                final StepContract contract = manager.getStepContract(step);
+                r.put(step, new HashSet<>(extractGValues(contract)));
+            }
+
+            if (step instanceof TraversalParent) {
+                TraversalParent parent = (TraversalParent) step;
+
+                // Process global children
+                for (Traversal.Admin<?, ?> child : parent.getGlobalChildren()) {
+                    gatherStepGValues(child, r);
+                }
+
+                // Process local children
+                for (Traversal.Admin<?, ?> child : parent.getLocalChildren()) {
+                    gatherStepGValues(child, r);
+                }
+            }
+        }
+
+        return r;
+    }
 
     /**
      * Determines whether the GValueManager contains any registered GValues, steps, or predicates.
@@ -189,10 +234,40 @@ public final class GValueManager implements Serializable, Cloneable {
      */
     public void remove(final Step step) {
         if (this.locked) throw Traversal.Exceptions.traversalIsLocked();
-        StepContract removedContract = stepRegistry.remove(step);
+        final StepContract removedContract = stepRegistry.remove(step);
 
         if (removedContract != null) {
             removeGValues(extractGValues(removedContract));
+        }
+    }
+
+    /**
+     * Removes all potential step contracts for a particular traversal. This is not a recursive operation, so use
+     * {@link #removeAllRecursively(Traversal.Admin)} for that case.
+     */
+    public void removeAll(final Traversal.Admin<?, ?> traversal) {
+        if (this.locked) throw Traversal.Exceptions.traversalIsLocked();
+        traversal.getSteps().forEach(this::remove);
+    }
+
+    /**
+     * Removes all potential step contracts for a particular traversal. This is a recursive operation and will examine
+     * all steps in this traversal as well as associated child traversals.
+     */
+    public void removeAllRecursively(final Traversal.Admin<?, ?> traversal) {
+        if (this.locked) throw Traversal.Exceptions.traversalIsLocked();
+
+        for (Step step : traversal.getSteps()) {
+            this.remove(step);
+            if (step instanceof TraversalParent) {
+                TraversalParent parent = (TraversalParent) step;
+                for (Traversal.Admin<?, ?> child : parent.getGlobalChildren()) {
+                    removeAllRecursively(child);
+                }
+                for (Traversal.Admin<?, ?> child : parent.getLocalChildren()) {
+                    removeAllRecursively(child);
+                }
+            }
         }
     }
 
@@ -386,6 +461,21 @@ public final class GValueManager implements Serializable, Cloneable {
             }
         }
         return results;
+    }
+
+    private void registerGValues(final Collection<GValue<?>> gValues) {
+        for (GValue<?> gValue : gValues) {
+            if (gValue.getName() != null) {
+                gValueRegistry.put(gValue.getName(), gValue);
+            }
+        }
+    }
+
+    private void removeGValues(final Collection<GValue<?>> gValues) {
+        for (GValue<?> gValue : gValues) {
+            gValueRegistry.remove(gValue.getName(), gValue);
+            // TODO:: cascade to other steps
+        }
     }
 
     @Override

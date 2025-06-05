@@ -31,13 +31,11 @@ public final class CardinalityValueTraversal extends AbstractLambdaTraversal {
     private final Object value;
 
     private final Bytecode bytecode;
-    private final GValueManager gValueManager;
 
     public CardinalityValueTraversal(final VertexProperty.Cardinality cardinality, final Object value) {
         this.cardinality = cardinality;
         this.value = value;
         this.bytecode = new Bytecode(CardinalityValueTraversal.class.getSimpleName(), cardinality.name(), value);
-        this.gValueManager = new GValueManager();
     }
 
     public static CardinalityValueTraversal from(final Bytecode.Instruction inst) {
@@ -48,11 +46,6 @@ public final class CardinalityValueTraversal extends AbstractLambdaTraversal {
     @Override
     public Bytecode getBytecode() {
         return this.bytecode;
-    }
-
-    @Override
-    public GValueManager getGValueManager() {
-        return this.gValueManager;
     }
 
     public VertexProperty.Cardinality getCardinality() {

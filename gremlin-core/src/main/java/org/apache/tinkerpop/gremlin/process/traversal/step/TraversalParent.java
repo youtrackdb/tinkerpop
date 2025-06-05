@@ -82,6 +82,8 @@ public interface TraversalParent extends AutoCloseable {
         childTraversal.setParent(this);
         childTraversal.getSideEffects().mergeInto(this.asStep().getTraversal().getSideEffects());
         childTraversal.setSideEffects(this.asStep().getTraversal().getSideEffects());
+        childTraversal.getGValueManager().mergeInto(this.asStep().getTraversal().getGValueManager());
+        childTraversal.setGValueManager(this.asStep().getTraversal().getGValueManager());
         return (Traversal.Admin<S, E>) childTraversal;
     }
 

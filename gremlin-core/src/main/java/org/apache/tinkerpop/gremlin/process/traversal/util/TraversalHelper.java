@@ -23,7 +23,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.AbstractLambdaTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
@@ -56,7 +55,6 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -185,6 +183,7 @@ public final class TraversalHelper {
      */
     public static <S, E> void replaceStep(final Step<S, E> removeStep, final Step<S, E> insertStep, final Traversal.Admin<?, ?> traversal) {
         final int i;
+        traversal.getGValueManager().remove(removeStep);
         traversal.removeStep(i = stepIndex(removeStep, traversal));
         traversal.addStep(i, insertStep);
     }
@@ -215,7 +214,7 @@ public final class TraversalHelper {
     }
 
     public static <S, E> Step<?, E> insertTraversal(final int insertIndex, final Traversal.Admin<S, E> insertTraversal, final Traversal.Admin<?, ?> traversal) {
-        traversal.getGValueManager().merge(insertTraversal.getGValueManager());
+        traversal.getGValueManager().mergeInto(insertTraversal.getGValueManager());
         if (0 == traversal.getSteps().size()) {
             Step currentStep = EmptyStep.instance();
             for (final Step insertStep : insertTraversal.getSteps()) {
@@ -738,9 +737,16 @@ public final class TraversalHelper {
         return false;
     }
 
+    public static Traversal.Admin<?, ?> removeStep(final Step<?, ?> stepToRemove, final Traversal.Admin<?, ?> traversal) {
+        traversal.getGValueManager().remove(stepToRemove);
+        return traversal.removeStep(stepToRemove);
+    }
+
     public static void removeAllSteps(final Traversal.Admin<?, ?> traversal) {
         final int size = traversal.getSteps().size();
         for (int i = 0; i < size; i++) {
+            final Step<?, ?> stepToRemove = traversal.getSteps().get(0);
+            traversal.getGValueManager().remove(stepToRemove);
             traversal.removeStep(0);
         }
     }

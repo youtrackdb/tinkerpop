@@ -24,13 +24,13 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.EdgeLabelContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.RangeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
+import org.apache.tinkerpop.gremlin.util.CollectionUtil;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,11 +68,7 @@ public class GValueManagerVerifier {
         }
 
         public BeforeVerifier<S, E> beforeApplying() {
-            // Capture pre-strategy state
-            final Map<Step, Set<String>> preStepVariables = captureStepVariables(traversal);
-            final Set<String> preVariables = new HashSet<>(traversal.getGValueManager().variableNames());
-
-            return new BeforeVerifier<>(traversal, preVariables, preStepVariables);
+            return new BeforeVerifier<>(traversal, this);
         }
 
         /**
@@ -80,8 +76,10 @@ public class GValueManagerVerifier {
          */
         public AfterVerifier<S, E> afterApplying() {
             // Capture pre-strategy state
-            final Map<Step, Set<String>> preStepVariables = captureStepVariables(traversal);
-            final Set<String> preVariables = new HashSet<>(traversal.getGValueManager().variableNames());
+            final GValueManager manager = traversal.getGValueManager();
+            final Map<Step, Set<GValue>> preStepVariables = manager.gatherStepGValues(traversal);
+            final Set<String> preVariables = manager.variableNames();
+            final Set<GValue> preGValues = manager.gValues();
 
             // Apply strategy
             final TraversalStrategies strategies = new DefaultTraversalStrategies();
@@ -89,40 +87,31 @@ public class GValueManagerVerifier {
             traversal.setStrategies(strategies);
             traversal.applyStrategies();
 
-            return new AfterVerifier<>(traversal, preVariables, preStepVariables);
+            return new AfterVerifier<>(traversal, preVariables, preStepVariables, preGValues);
+        }
+    }
+
+    /**
+     * Provides verification methods before strategy applications
+     */
+    public static class BeforeVerifier<S, E> extends AbstractVerifier<S, E, BeforeVerifier<S, E>> {
+        private final VerificationBuilder<S, E> verificationBuilder;
+
+        private BeforeVerifier(final Traversal.Admin<S, E> traversal, final VerificationBuilder<S, E> verificationBuilder) {
+            super(traversal);
+            this.verificationBuilder = verificationBuilder;
         }
 
-        private Map<Step, Set<String>> captureStepVariables(final Traversal.Admin<?, ?> traversal) {
-            final Map<Step, Set<String>> result = new HashMap<>();
-            final GValueManager manager = traversal.getGValueManager();
-
-            for (Step step : traversal.getSteps()) {
-                if (manager.isParameterized(step)) {
-                    result.put(step, extractStepVariables(step, manager));
-                }
-            }
-            return result;
+        @Override
+        protected BeforeVerifier<S, E> self() {
+            return this;
         }
 
-        private Set<String> extractStepVariables(final Step step, final GValueManager manager) {
-            final Set<String> variables = new HashSet<>();
-            final Object contract = manager.getStepContract(step);
-
-            if (contract instanceof EdgeLabelContract) {
-                final EdgeLabelContract<GValue<String>> edgeLabelContract = (EdgeLabelContract<GValue<String>>) contract;
-                for (GValue<String> label : edgeLabelContract.getEdgeLabels()) {
-                    if (label.isVariable()) variables.add(label.getName());
-                }
-            } else if (contract instanceof RangeContract) {
-                final RangeContract<GValue<Long>> rangeContract = (RangeContract<GValue<Long>>) contract;
-                if (rangeContract.getLowRange().isVariable())
-                    variables.add(rangeContract.getLowRange().getName());
-                if (rangeContract.getHighRange().isVariable())
-                    variables.add(rangeContract.getHighRange().getName());
-            }
-            // Add more contract type handling as needed
-
-            return variables;
+        /**
+         * Applies the strategy and returns the verifier
+         */
+        public AfterVerifier<S, E> afterApplying() {
+            return verificationBuilder.afterApplying();
         }
     }
 
@@ -130,10 +119,30 @@ public class GValueManagerVerifier {
      * Provides verification methods after strategy application
      */
     public static class AfterVerifier<S, E> extends AbstractVerifier<S, E, AfterVerifier<S, E>> {
+        protected final Set<String> preVariables;
+        protected final Set<GValue> preGValues;
+        protected final Map<Step, Set<GValue>> preStepGValues;
+        protected final Map<Step, Set<String>> preStepVariables;
+
         private AfterVerifier(final Traversal.Admin<S, E> traversal,
                               final Set<String> preVariables,
-                              final Map<Step, Set<String>> preStepVariables) {
-            super(traversal, preVariables, preStepVariables);
+                              final Map<Step, Set<GValue>> preStepGValues,
+                              final Set<GValue> preGValues) {
+            super(traversal);
+            this.preVariables = preVariables;
+            this.preStepGValues = preStepGValues;
+            this.preGValues = preGValues;
+
+            // compute the preStepVariables from the preStepGValues by converting the GValue to their name if
+            // their isVariable is true
+            this.preStepVariables = preStepGValues.entrySet().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                            Map.Entry::getKey,
+                            e -> e.getValue().stream()
+                                    .filter(GValue::isVariable)
+                                    .map(GValue::getName)
+                                    .collect(java.util.stream.Collectors.toSet())
+                    ));
         }
 
         @Override
@@ -145,7 +154,7 @@ public class GValueManagerVerifier {
          * Verifies that all variables are preserved
          */
         public AfterVerifier<S, E> variablesArePreserved() {
-            final Set<String> currentVariables = traversal.getGValueManager().variableNames();
+            final Set<String> currentVariables = manager.variableNames();
             assertEquals("All variables should be preserved", preVariables, currentVariables);
             return this;
         }
@@ -154,7 +163,7 @@ public class GValueManagerVerifier {
          * Verifies that all variables are removed
          */
         public AfterVerifier<S, E> variablesAreRemoved() {
-            final Set<String> currentVariables = traversal.getGValueManager().variableNames();
+            final Set<String> currentVariables = manager.variableNames();
             assertThat("All variables should be removed", currentVariables.isEmpty(), is(true));
             return this;
         }
@@ -163,7 +172,7 @@ public class GValueManagerVerifier {
          * Verifies that variables have been transferred between steps
          */
         public AfterVerifier<S, E> variablesHaveBeenTransferredFrom(final Step originalStep) {
-            if (!preStepVariables.containsKey(originalStep)) {
+            if (!preStepGValues.containsKey(originalStep)) {
                 fail("Original step was not parameterized before strategy application");
             }
 
@@ -182,15 +191,11 @@ public class GValueManagerVerifier {
      */
     public static abstract class AbstractVerifier<S, E, T extends AbstractVerifier<S, E, T>> {
         protected final Traversal.Admin<S, E> traversal;
-        protected final Set<String> preVariables;
-        protected final Map<Step, Set<String>> preStepVariables;
+        protected final GValueManager manager;
 
-        protected AbstractVerifier(final Traversal.Admin<S, E> traversal,
-                                   final Set<String> preVariables,
-                                   final Map<Step, Set<String>> preStepVariables) {
+        protected AbstractVerifier(final Traversal.Admin<S, E> traversal) {
             this.traversal = traversal;
-            this.preVariables = preVariables;
-            this.preStepVariables = preStepVariables;
+            this.manager = traversal.getGValueManager();
         }
 
         /**
@@ -199,20 +204,10 @@ public class GValueManagerVerifier {
         protected abstract T self();
 
         /**
-         * Verifies that specific variables exist
-         */
-        public T hasVariables(final String... variables) {
-            final Set<String> currentVariables = traversal.getGValueManager().variableNames();
-            final Set<String> expected = new HashSet<>(Arrays.asList(variables));
-            assertEquals("Variables should match expected set", expected, currentVariables);
-            return self();
-        }
-
-        /**
          * Verifies that GValueManager is empty
          */
         public T managerIsEmpty() {
-            assertThat("GValueManager should be empty", traversal.getGValueManager().isEmpty(), is(true));
+            assertThat("GValueManager should be empty", manager.isEmpty(), is(true));
             return self();
         }
 
@@ -242,7 +237,6 @@ public class GValueManagerVerifier {
         public T edgeLabelContractIsValid(final Step step, final int expectedCount,
                                           final String[] expectedNames,
                                           final String[] expectedValues) {
-            final GValueManager manager = traversal.getGValueManager();
             assertThat("Step should be parameterized", manager.isParameterized(step), is(true));
 
             final EdgeLabelContract<GValue<String>> contract = manager.getStepContract(step);
@@ -265,7 +259,6 @@ public class GValueManagerVerifier {
          */
         public T rangeContractIsValid(final Step step, final long expectedLow, final long expectedHigh,
                                       final String lowName, final String highName) {
-            final GValueManager manager = traversal.getGValueManager();
             assertThat("Step should be parameterized", manager.isParameterized(step), is(true));
 
             final RangeContract<GValue<Long>> contract = manager.getStepContract(step);
@@ -278,21 +271,22 @@ public class GValueManagerVerifier {
 
             return self();
         }
-    }
 
-    /**
-     * Provides verification methods before strategy applications
-     */
-    public static class BeforeVerifier<S, E> extends AbstractVerifier<S, E, BeforeVerifier<S, E>> {
-        private BeforeVerifier(final Traversal.Admin<S, E> traversal,
-                               final Set<String> preVariables,
-                               final Map<Step, Set<String>> preStepVariables) {
-            super(traversal, preVariables, preStepVariables);
+        /**
+         * Verifies that specific variables exist
+         */
+        public T hasVariables(final String... variables) {
+            return hasVariables(CollectionUtil.asSet(variables));
         }
 
-        @Override
-        protected BeforeVerifier<S, E> self() {
-            return this;
+        /**
+         * Verifies that specific variables exist
+         */
+        public T hasVariables(final Set<String> variables) {
+            // Get variables from the current traversal and all child traversals
+            final Set<String> currentVariables = manager.variableNames();
+            assertEquals("Variables should match expected set", variables, currentVariables);
+            return self();
         }
     }
 }

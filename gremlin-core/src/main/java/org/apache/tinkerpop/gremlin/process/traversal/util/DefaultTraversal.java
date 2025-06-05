@@ -114,6 +114,11 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
     }
 
     @Override
+    public void setGValueManager(final GValueManager gValueManager) {
+        this.gValueManager = gValueManager;
+    }
+
+    @Override
     public Traversal.Admin<S, E> asAdmin() {
         return this;
     }
@@ -403,11 +408,7 @@ public class DefaultTraversal<S, E> implements Traversal.Admin<S, E> {
         if (this.locked) throw Exceptions.traversalIsLocked();
         final Step previousStep = this.steps.size() > 0 && index != 0 ? steps.get(index - 1) : null;
         final Step nextStep = this.steps.size() > index + 1 ? steps.get(index + 1) : null;
-        final Step removedStep = this.steps.remove(index);
-
-        // reset state in manager for the removed step
-        getGValueManager().remove(removedStep);
-
+        this.steps.remove(index);
         if (null != previousStep) previousStep.setNextStep(null == nextStep ? EmptyStep.instance() : nextStep);
         if (null != nextStep) nextStep.setPreviousStep(null == previousStep ? EmptyStep.instance() : previousStep);
         return (Traversal.Admin<S2, E2>) this;
