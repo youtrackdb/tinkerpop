@@ -163,12 +163,17 @@ public class AdjacentToIncidentStrategyTest {
 
         @Test
         public void shouldCopyGValueParameters() {
-            GValueManagerVerifier.verify(traversal, AdjacentToIncidentStrategy.instance())
-                    .afterApplying()
-                    .hasVariables(expectedNames)
-                    .edgeLabelContractIsValid(traversal.getStartStep(), expectedLabelCount,
-                            expectedNames,
-                            expectedValues);
+            // get reference to the start step before we apply strategies as its going to get replaced and we need
+            // it to verify the before state.
+            final Step step = traversal.asAdmin().getSteps().get(0);
+            GValueManagerVerifier.verify(traversal, AdjacentToIncidentStrategy.instance()).
+                    beforeApplying().
+                        hasVariables(expectedNames).
+                        edgeLabelContractIsValid(step, expectedLabelCount, expectedNames, expectedValues).
+                    afterApplying().
+                        hasVariables(expectedNames).
+                        variablesArePreserved().
+                        edgeLabelContractIsValid(traversal.getStartStep(), expectedLabelCount, expectedNames, expectedValues);
         }
     }
 }

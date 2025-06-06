@@ -19,6 +19,7 @@
 package org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization;
 
 import org.apache.tinkerpop.gremlin.process.traversal.GValueManager;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Translator;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
@@ -79,6 +80,9 @@ public class CountStrategyTest {
                 {__.count().is(-1), __.limit(0).count().is(-1)}, // -1 for RangeGlobalStep means no upper limit
                 {__.count().is(-2), __.limit(0).count().is(-2)},
                 {__.count().is(-2023), __.limit(0).count().is(-2023)},
+                {__.count().is(P.between(0, 10)), __.limit(10).count().is(P.between(0, 10))},
+                {__.count().is(P.between(5, 10)), __.limit(10).count().is(P.between(5, 10))},
+                {__.count().is(P.gt(10).or(lt(5))), __.limit(11).count().is(P.gt(10).or(lt(5)))},
                 {__.out().count().is(0), __.out().limit(1).count().is(0)},
                 {__.outE().count().is(lt(1)), __.outE().limit(1).count().is(lt(1))},
                 {__.both().count().is(lte(0)), __.both().limit(1).count().is(lte(0))},
@@ -102,7 +106,7 @@ public class CountStrategyTest {
                 {__.out().count().is(without(2, 6, 4)), __.out().limit(6).count().is(without(2, 6, 4))},
                 {__.map(__.count().is(0)), __.map(__.limit(1).count().is(0))},
                 {__.flatMap(__.count().is(0)), __.flatMap(__.limit(1).count().is(0))},
-                {__.flatMap(__.count().is(0)).as("a"), __.flatMap(__.count().is(0)).as("a")},
+                {__.flatMap(__.count().is(0)).as("a"), __.flatMap(__.count().is(0)).as("a")}, // no change
                 {__.filter(__.count().is(0)).as("a"), __.not(__.identity()).as("a")},
                 {__.filter(__.count().is(0)), __.not(__.identity())},
                 {__.sideEffect(__.count().is(0)), __.sideEffect(__.not(__.identity()))},
@@ -195,6 +199,7 @@ public class CountStrategyTest {
             return Arrays.asList(new Object[][]{
                     { __.count().is(GValue.of("x", 0)).asAdmin() },
                     { __.count().is(GValue.of("x", 1)).asAdmin() },
+                    { __.count().is(P.between(GValue.of("x", 0), GValue.of("y", 10)))},
                     { __.out().count().is(gt(GValue.ofInteger("x", 1))).asAdmin() },
                     { __.out().count().is(lt(GValue.ofInteger("x", 1))).asAdmin() },
                     { __.out().count().is(gte(GValue.ofInteger("x", 1))).asAdmin() },
@@ -236,7 +241,7 @@ public class CountStrategyTest {
                     {__.count().is(GValue.of("x", 0)).store("x")},
                     {__.repeat(__.out()).until(__.outE().count().is(GValue.of("x", 0)))},
                     {__.repeat(__.out()).until(__.out().out().values("name").count().is(GValue.of("x", 0)))},
-                    {__.repeat(__.out()).until(__.out().out().properties("age").has("x").count().is(GValue.of("x", 0)))}, /// //////////
+                    {__.repeat(__.out()).until(__.out().out().properties("age").has("x").count().is(GValue.of("x", 0)))},
                     {__.repeat(__.out()).emit(__.outE().count().is(GValue.of("x", 0)))},
                     {__.where(__.outE().hasLabel("created").count().is(GValue.of("x", 0)))},
                     {__.where(__.out().outE().hasLabel("created").count().is(GValue.of("x", 0)))},
@@ -286,6 +291,13 @@ public class CountStrategyTest {
                     {__.path().filter(__.count().is(gte(GValue.ofDouble("x", 0.5)))).limit(5)},
                     {__.path().filter(__.unfold().count().is(gte(GValue.ofDouble("x", 0.5))))},
                     {__.path().filter(__.unfold().count().is(gte(GValue.ofDouble("x", 1.5))))},
+                    {__.project("a").by(__.count().is(GValue.of("x", 0)))},
+                    {__.select("a").by(__.count().is(GValue.of("x", 0)))},
+                    {__.group().by(__.count().is(GValue.of("x", 0)))},
+                    {__.choose(__.count().is(GValue.of("x", 0)), __.out(), __.in())},
+                    {__.count().as("c").is(GValue.of("x", 0))},
+                    {__.union(__.count().is(GValue.of("x", 0)), __.out().count())},
+                    {__.coalesce(__.count().is(GValue.of("x", 0)), __.out().count())},
             });
         }
 
@@ -314,6 +326,9 @@ public class CountStrategyTest {
         public static Iterable<Object[]> generateTestParameters() {
             return Arrays.asList(new Object[][]{
                     {__.flatMap(__.count().is(GValue.of("x", 0))).as("a")},
+                    {__.limit(5).count().is(GValue.of("x", 0))},
+                    {__.range(1, 5).count().is(GValue.of("x", 0))},
+                    {__.count().is(P.within(GValue.of("x", "string"), GValue.of("y", "another")))},
             });
         }
 

@@ -27,10 +27,13 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.EdgeLabelContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.RangeContract;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.FilterRankingStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.util.CollectionUtil;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,14 +48,40 @@ import static org.junit.Assert.fail;
 /**
  * Provides utilities to verify the state and behavior of {@code GValueManager} during and after traversal strategy
  * application. It offers a builder pattern to configure and perform verification checks for traversals.
+ * Multiple strategies can be applied in the order they are provided.
  */
 public class GValueManagerVerifier {
 
     /**
-     * Creates a verification builder for the given traversal and strategy
+     * Creates a verification builder for the given traversal and strategies
      */
     public static <S, E> VerificationBuilder<S, E> verify(final Traversal.Admin<S, E> traversal, final TraversalStrategy strategy) {
-        return new VerificationBuilder<>(traversal, strategy);
+        return verify(traversal, strategy, Collections.emptySet());
+    }
+
+    /**
+     * Creates a verification builder for the given traversal and strategies
+     */
+    public static <S, E> VerificationBuilder<S, E> verify(final Traversal.Admin<S, E> traversal, final TraversalStrategy strategy,
+                                                          final Collection<TraversalStrategy> additionalStrategies) {
+        // Create an array with FilterRankingStrategy as the first strategy
+        TraversalStrategy[] strategies;
+
+        if (additionalStrategies.isEmpty()) {
+            // If no additional strategies, just use the one provided
+            strategies = new TraversalStrategy[] { strategy };
+        } else {
+            // If there are additional strategies, combine them with one provided
+            strategies = new TraversalStrategy[additionalStrategies.size() + 1];
+            strategies[0] = FilterRankingStrategy.instance();
+
+            int i = 1;
+            for (TraversalStrategy ts : additionalStrategies) {
+                strategies[i++] = ts;
+            }
+        }
+
+        return new VerificationBuilder<>(traversal, strategies);
     }
 
     /**
@@ -60,11 +89,11 @@ public class GValueManagerVerifier {
      */
     public static class VerificationBuilder<S, E> {
         private final Traversal.Admin<S, E> traversal;
-        private final TraversalStrategy strategy;
+        private final TraversalStrategy[] strategies;
 
-        private VerificationBuilder(final Traversal.Admin<S, E> traversal, final TraversalStrategy strategy) {
+        private VerificationBuilder(final Traversal.Admin<S, E> traversal, final TraversalStrategy... strategies) {
             this.traversal = traversal;
-            this.strategy = strategy;
+            this.strategies = strategies;
         }
 
         public BeforeVerifier<S, E> beforeApplying() {
@@ -72,7 +101,7 @@ public class GValueManagerVerifier {
         }
 
         /**
-         * Applies the strategy and returns the verifier
+         * Applies the strategies and returns the verifier
          */
         public AfterVerifier<S, E> afterApplying() {
             // Capture pre-strategy state
@@ -81,10 +110,12 @@ public class GValueManagerVerifier {
             final Set<String> preVariables = manager.variableNames();
             final Set<GValue> preGValues = manager.gValues();
 
-            // Apply strategy
-            final TraversalStrategies strategies = new DefaultTraversalStrategies();
-            strategies.addStrategies(strategy);
-            traversal.setStrategies(strategies);
+            // Apply strategies
+            final TraversalStrategies traversalStrategies = new DefaultTraversalStrategies();
+            for (TraversalStrategy strategy : strategies) {
+                traversalStrategies.addStrategies(strategy);
+            }
+            traversal.setStrategies(traversalStrategies);
             traversal.applyStrategies();
 
             return new AfterVerifier<>(traversal, preVariables, preStepVariables, preGValues);
@@ -156,32 +187,6 @@ public class GValueManagerVerifier {
         public AfterVerifier<S, E> variablesArePreserved() {
             final Set<String> currentVariables = manager.variableNames();
             assertEquals("All variables should be preserved", preVariables, currentVariables);
-            return this;
-        }
-
-        /**
-         * Verifies that all variables are removed
-         */
-        public AfterVerifier<S, E> variablesAreRemoved() {
-            final Set<String> currentVariables = manager.variableNames();
-            assertThat("All variables should be removed", currentVariables.isEmpty(), is(true));
-            return this;
-        }
-
-        /**
-         * Verifies that variables have been transferred between steps
-         */
-        public AfterVerifier<S, E> variablesHaveBeenTransferredFrom(final Step originalStep) {
-            if (!preStepGValues.containsKey(originalStep)) {
-                fail("Original step was not parameterized before strategy application");
-            }
-
-            final Set<String> originalVariables = preStepVariables.get(originalStep);
-            final Set<String> currentVariables = traversal.getGValueManager().variableNames();
-
-            assertThat("Variables should be transferred",
-                    currentVariables.containsAll(originalVariables), is(true));
-
             return this;
         }
     }
@@ -273,14 +278,14 @@ public class GValueManagerVerifier {
         }
 
         /**
-         * Verifies that specific variables exist
+         * Verifies that specific variables exist.
          */
         public T hasVariables(final String... variables) {
             return hasVariables(CollectionUtil.asSet(variables));
         }
 
         /**
-         * Verifies that specific variables exist
+         * Verifies that specific variables exist.
          */
         public T hasVariables(final Set<String> variables) {
             // Get variables from the current traversal and all child traversals
