@@ -104,7 +104,8 @@ public final class GValueManager implements Serializable, Cloneable {
     }
 
     public void mergeInto(final GValueManager other) {
-        if (this.locked) throw Traversal.Exceptions.traversalIsLocked();
+        //TODO, how to proceed when locked? Often end up here with locked traversals in OLAP as Traversals are cloned after strategies have finished running.
+//        if (this.locked) throw Traversal.Exceptions.traversalIsLocked();
 
         //TODO deal with conflicts
         other.gValueRegistry.putAll(gValueRegistry);

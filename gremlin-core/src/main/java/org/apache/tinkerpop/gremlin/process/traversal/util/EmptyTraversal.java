@@ -60,7 +60,7 @@ public final class EmptyTraversal<S, E> implements Traversal.Admin<S, E> {
 
     @Override
     public GValueManager getGValueManager() {
-        return null;
+        return new GValueManager();
     }
 
     @Override
