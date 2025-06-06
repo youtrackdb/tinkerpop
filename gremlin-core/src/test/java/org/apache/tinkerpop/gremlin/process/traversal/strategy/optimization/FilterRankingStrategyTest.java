@@ -57,6 +57,8 @@ import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.or;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.out;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.outE;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.properties;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -228,13 +230,9 @@ public class FilterRankingStrategyTest {
         @Test
         public void doTest() {
             final String repr = translator.translate(original.getBytecode()).getScript();
-            final TraversalStrategies strategies = new DefaultTraversalStrategies();
-            strategies.addStrategies(FilterRankingStrategy.instance());
-            for (final TraversalStrategy strategy : this.otherStrategies) {
-                strategies.addStrategies(strategy);
-            }
-            this.original.asAdmin().setStrategies(strategies);
-            this.original.asAdmin().applyStrategies();
+            GValueManagerVerifier.verify(original.asAdmin(), FilterRankingStrategy.instance(), otherStrategies)
+                    .afterApplying()
+                    .managerIsEmpty();
             assertEquals(repr, this.optimized, this.original);
         }
     }

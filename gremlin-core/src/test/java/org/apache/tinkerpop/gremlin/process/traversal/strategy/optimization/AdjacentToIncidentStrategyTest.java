@@ -60,13 +60,6 @@ public class AdjacentToIncidentStrategyTest {
         @Parameterized.Parameter(value = 1)
         public Traversal optimized;
 
-        void applyAdjacentToIncidentStrategy(final Traversal traversal) {
-            final TraversalStrategies strategies = new DefaultTraversalStrategies();
-            strategies.addStrategies(AdjacentToIncidentStrategy.instance());
-            traversal.asAdmin().setStrategies(strategies);
-            traversal.asAdmin().applyStrategies();
-        }
-
         @Parameterized.Parameters(name = "{0}")
         public static Iterable<Object[]> generateTestParameters() {
             return Arrays.asList(new Traversal[][]{
@@ -94,9 +87,10 @@ public class AdjacentToIncidentStrategyTest {
         @Test
         public void doTest() {
             final String repr = translator.translate(original.getBytecode()).getScript();
-            applyAdjacentToIncidentStrategy(original);
+            GValueManagerVerifier.verify(original.asAdmin(), AdjacentToIncidentStrategy.instance())
+                    .afterApplying()
+                    .managerIsEmpty();
             assertEquals(repr, optimized, original);
-            assertThat(optimized.asAdmin().getGValueManager().isEmpty(), is(true));
         }
     }
 

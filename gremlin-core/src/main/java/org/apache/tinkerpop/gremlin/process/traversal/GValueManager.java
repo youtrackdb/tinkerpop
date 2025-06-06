@@ -170,7 +170,7 @@ public final class GValueManager implements Serializable, Cloneable {
             final Set<GValue> gvalues = new HashSet<>();
             for (StepContract contract : stepRegistry.values()) {
                 extractGValues(contract).stream().
-                        filter(gv -> gv.getName() != null).forEach(gvalues::add);
+                        filter(GValue::isVariable).forEach(gvalues::add);
             }
             return Collections.unmodifiableSet(gvalues);
         }
@@ -212,10 +212,18 @@ public final class GValueManager implements Serializable, Cloneable {
     }
 
     /**
-     * Determines whether the GValueManager contains any registered GValues, steps, or predicates.
+     * Determines whether the manager has step registrations.
      */
-    public boolean isEmpty() {
-        return gValueRegistry.isEmpty() && stepRegistry.isEmpty();
+    public boolean hasStepRegistrations() {
+        return stepRegistry.isEmpty();
+    }
+
+    /**
+     * Determines whether the manager has step registrations. This call is not consistent until {@link #lock()} is
+     * called.
+     */
+    public boolean hasVariables() {
+        return variableNames().isEmpty();
     }
 
     /**
@@ -272,10 +280,6 @@ public final class GValueManager implements Serializable, Cloneable {
         }
     }
 
-    private Collection<GValue<?>> extractPredicateGValues(final P predicate) {
-        return predicate.getGValueRegistry().getGValues();
-    }
-
     private Collection<GValue<?>> extractGValues(final StepContract contract) {
         if (contract instanceof RangeContract) {
             return extractGValue((RangeContract<GValue<Long>>) contract);
@@ -309,7 +313,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final RangeContract<GValue<Long>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         if (contract.getHighRange().isVariable()) {
             results.add(contract.getHighRange());
         }
@@ -335,7 +339,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final MergeElementContract<GValue<Map<?,?>>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         if (contract.getMergeMap() != null) {
             results.add(contract.getMergeMap());
         }
@@ -353,7 +357,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final ElementIdsContract<GValue<?>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         for (GValue gValue: contract.getIds()) {
             if (gValue.isVariable()) {
                 results.add(gValue);
@@ -367,7 +371,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final AddVertexContract<GValue<String>, ?, GValue<?>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         if (contract.getLabel() != null) {
             results.add(contract.getLabel());
         }
@@ -382,7 +386,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final AddEdgeContract<GValue<String>, GValue<Vertex>, ?, GValue<?>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         if (contract.getLabel() != null) {
             results.add(contract.getLabel());
         }
@@ -405,7 +409,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final AddPropertyContract<?, GValue<?>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         results.add(contract.getValue());
         for (GValue<?> value : contract.getProperties().values()) {
             results.add(value);
@@ -418,7 +422,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final EdgeLabelContract<GValue<String>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         for (GValue gValue: contract.getEdgeLabels()) {
             if (gValue.getName() != null) {
                 results.add(gValue);
@@ -432,7 +436,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final CallContract<GValue<Map<?,?>>> contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         if (contract.getStaticParams().getName() != null) {
             results.add(contract.getStaticParams());
         }
@@ -455,7 +459,7 @@ public final class GValueManager implements Serializable, Cloneable {
      * manager.
      */
     private Collection<GValue<?>> extractGValue(final HasContainerHolder contract) {
-        Collection<GValue<?>> results = new ArrayList();
+        final Collection<GValue<?>> results = new ArrayList();
         for (P<?> predicate : contract.getPredicates()) {
             if (predicate != null) {
                 results.addAll(predicate.getGValueRegistry().getGValues());
@@ -466,7 +470,7 @@ public final class GValueManager implements Serializable, Cloneable {
 
     private void registerGValues(final Collection<GValue<?>> gValues) {
         for (GValue<?> gValue : gValues) {
-            if (gValue.getName() != null) {
+            if (gValue.isVariable()) {
                 gValueRegistry.put(gValue.getName(), gValue);
             }
         }

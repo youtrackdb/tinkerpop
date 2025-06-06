@@ -24,7 +24,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
-import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.EdgeLabelContract;
 import org.apache.tinkerpop.gremlin.process.traversal.step.stepContract.RangeContract;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.FilterRankingStrategy;
@@ -34,7 +33,6 @@ import org.apache.tinkerpop.gremlin.util.CollectionUtil;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +41,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  * Provides utilities to verify the state and behavior of {@code GValueManager} during and after traversal strategy
@@ -204,15 +201,18 @@ public class GValueManagerVerifier {
         }
 
         /**
-         * Returns this instance cast to the implementing class type
+         * Returns this instance cast to the implementing class type.
          */
         protected abstract T self();
 
         /**
-         * Verifies that GValueManager is empty
+         * Verifies that GValueManager is empty, specifically meaning that there are no variables in the manager. There
+         * might yet be unnamed {@link GValue} instances but since we don't bind to those and they are usually incident
+         * to something like {@code V(1, x=2, 3)} where one variable implies that all arguments must be converted to
+         * {@link GValue} you can have scenarios where there is a mix.
          */
         public T managerIsEmpty() {
-            assertThat("GValueManager should be empty", manager.isEmpty(), is(true));
+            assertThat(String.format("GValueManager should be empty but contains [%s]", manager.gValues()), manager.hasVariables(), is(true));
             return self();
         }
 
