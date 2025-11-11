@@ -137,7 +137,7 @@ public final class Cluster {
      * error will not be raised at this point.  Connections get initialized in the {@link Client} when a request is
      * submitted or can be directly initialized via {@link Client#init()}.
      *
-     * @param sessionId user supplied id for the session which should be unique (a UUID is ideal).
+     * @param sessionId          user supplied id for the session which should be unique (a UUID is ideal).
      * @param manageTransactions enables auto-transactions when set to true
      */
     public <T extends Client> T connect(final String sessionId, final boolean manageTransactions) {
@@ -174,6 +174,10 @@ public final class Cluster {
     public static Builder build(final File configurationFile) throws FileNotFoundException {
         final Settings settings = Settings.read(new FileInputStream(configurationFile));
         return getBuilderFromSettings(settings);
+    }
+
+    public static Builder build(final Configuration configuration) {
+        return getBuilderFromSettings(Settings.from(configuration));
     }
 
     private static Builder getBuilderFromSettings(final Settings settings) {
@@ -555,7 +559,8 @@ public final class Cluster {
                 builder.trustManager(tmf);
             }
 
-        } catch (UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException | CertificateException | IOException e) {
+        } catch (UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException | CertificateException |
+                 IOException e) {
             logger.error("There was an error enabling SSL.", e);
             return null;
         }
@@ -565,7 +570,7 @@ public final class Cluster {
         }
 
         if (null != connectionPoolSettings.sslEnabledProtocols && !connectionPoolSettings.sslEnabledProtocols.isEmpty()) {
-            builder.protocols(connectionPoolSettings.sslEnabledProtocols.toArray(new String[] {}));
+            builder.protocols(connectionPoolSettings.sslEnabledProtocols.toArray(new String[]{}));
         }
 
         if (connectionPoolSettings.sslSkipCertValidation) {
@@ -774,8 +779,8 @@ public final class Cluster {
 
         /**
          * A list of SSL protocols to enable. @see <a href=
-         *      "https://docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#SunJSSE_Protocols">JSSE
-         *      Protocols</a>
+         * "https://docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#SunJSSE_Protocols">JSSE
+         * Protocols</a>
          */
         public Builder sslEnabledProtocols(final List<String> sslEnabledProtocols) {
             this.sslEnabledProtocols = sslEnabledProtocols;
@@ -784,8 +789,8 @@ public final class Cluster {
 
         /**
          * A list of cipher suites to enable. @see <a href=
-         *      "https://docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#SupportedCipherSuites">Cipher
-         *      Suites</a>
+         * "https://docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#SupportedCipherSuites">Cipher
+         * Suites</a>
          */
         public Builder sslCipherSuites(final List<String> sslCipherSuites) {
             this.sslCipherSuites = sslCipherSuites;
@@ -952,6 +957,7 @@ public final class Cluster {
         /**
          * Specifies an {@link HandshakeInterceptor} that will allow manipulation of the {@code FullHttpRequest} prior
          * to its being sent to the server.
+         *
          * @deprecated As of release 3.6.6, replaced with {@link #requestInterceptor(RequestInterceptor)}.
          */
         @Deprecated
@@ -1049,6 +1055,7 @@ public final class Cluster {
         /**
          * Configures whether cluster will send a user agent during
          * web socket handshakes
+         *
          * @param enableUserAgentOnConnect true enables the useragent. false disables the useragent.
          */
         public Builder enableUserAgentOnConnect(final boolean enableUserAgentOnConnect) {
@@ -1187,7 +1194,7 @@ public final class Cluster {
 
             this.factory = new Factory(builder.nioPoolSize);
             this.serializer = builder.serializer;
-            
+
             this.executor = new ScheduledThreadPoolExecutor(builder.workerPoolSize,
                     new BasicThreadFactory.Builder().namingPattern("gremlin-driver-worker-%d").build());
             this.executor.setRemoveOnCancelPolicy(true);
