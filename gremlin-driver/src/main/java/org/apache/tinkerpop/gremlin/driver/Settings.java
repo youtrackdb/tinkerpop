@@ -41,8 +41,7 @@ import java.util.stream.Collectors;
  *
  * @author Stephen Mallette (http://stephen.genoprime.com)
  */
-final class Settings {
-
+public final class Settings {
     /**
      * The port of the Gremlin Server to connect to which defaults to {@code 8192}. The same port will be applied for
      * all {@link #hosts}.
