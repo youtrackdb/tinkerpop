@@ -156,8 +156,8 @@ public interface Channelizer extends ChannelHandler {
         private static final Logger logger = LoggerFactory.getLogger(WebSocketChannelizer.class);
         private WebSocketClientHandler handler;
 
-        private WebSocketGremlinRequestEncoder gremlinRequestEncoder;
-        private WebSocketGremlinResponseDecoder gremlinResponseDecoder;
+        protected WebSocketGremlinRequestEncoder gremlinRequestEncoder;
+        protected WebSocketGremlinResponseDecoder gremlinResponseDecoder;
 
         @Override
         public void init(final Connection connection) {
