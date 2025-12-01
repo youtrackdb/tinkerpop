@@ -89,7 +89,7 @@ public class DriverRemoteConnection implements RemoteConnection {
         this.conf = Optional.of(conf);
     }
 
-    private DriverRemoteConnection(final Cluster cluster, final boolean tryCloseCluster, final String remoteTraversalSourceName) {
+    public DriverRemoteConnection(final Cluster cluster, final boolean tryCloseCluster, final String remoteTraversalSourceName) {
         client = cluster.connect(Client.Settings.build().create()).alias(remoteTraversalSourceName);
         this.remoteTraversalSourceName = remoteTraversalSourceName;
         this.tryCloseCluster = tryCloseCluster;
@@ -111,11 +111,11 @@ public class DriverRemoteConnection implements RemoteConnection {
         this.conf = Optional.of(conf);
     }
 
-    private DriverRemoteConnection(final Client client, final String remoteTraversalSourceName) {
+    public DriverRemoteConnection(final Client client, final String remoteTraversalSourceName) {
         this(client, remoteTraversalSourceName, false);
     }
 
-    private DriverRemoteConnection(final Client client, final String remoteTraversalSourceName, final boolean tryCloseClient) {
+    public DriverRemoteConnection(final Client client, final String remoteTraversalSourceName, final boolean tryCloseClient) {
         this.client = client.alias(remoteTraversalSourceName);
         this.remoteTraversalSourceName = remoteTraversalSourceName;
         this.tryCloseCluster = false;
