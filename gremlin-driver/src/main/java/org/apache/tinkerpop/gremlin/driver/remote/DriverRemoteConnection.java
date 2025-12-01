@@ -54,13 +54,13 @@ public class DriverRemoteConnection implements RemoteConnection {
 
     private static final String DEFAULT_TRAVERSAL_SOURCE = "g";
 
-    final Client client;
+    protected final Client client;
     private final boolean tryCloseCluster;
     private final boolean tryCloseClient;
     private final String remoteTraversalSourceName;
-    private transient Optional<Configuration> conf = Optional.empty();
+    protected transient Optional<Configuration> conf = Optional.empty();
 
-    private final boolean attachElements;
+    protected final boolean attachElements;
 
     public DriverRemoteConnection(final Configuration conf) {
         final boolean hasClusterConf = IteratorUtils.anyMatch(conf.getKeys(), k -> k.startsWith("clusterConfiguration"));
