@@ -57,7 +57,7 @@ public class DriverRemoteConnection implements RemoteConnection {
     protected final Client client;
     private final boolean tryCloseCluster;
     private final boolean tryCloseClient;
-    private final String remoteTraversalSourceName;
+    protected final String remoteTraversalSourceName;
     protected transient Optional<Configuration> conf = Optional.empty();
 
     protected final boolean attachElements;
