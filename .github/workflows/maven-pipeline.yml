@@ -56,7 +56,7 @@ jobs:
           server-password: MAVEN_PASSWORD
       - name: Maven deploy
         # Deploy to Maven Central as SNAPSHOT
-        run: mvn clean deploy -am -pl ${{ MODULES}} -DskipTests -B
+        run: mvn clean deploy -am -pl ${{ env.MODULES}} -DskipTests -B
         env:
           # Credentials mapped to environment variables
           MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
