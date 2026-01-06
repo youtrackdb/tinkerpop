@@ -18,10 +18,10 @@ jobs:
         platform:
           - os: ubuntu-latest
             arch: x64
-            mvn_opts: '-Dmaven.test.failure.ignore=true -am -pl ${{ MODULES }}'
+            mvn_opts: '-Dmaven.test.failure.ignore=true'
           - os: ubuntu-24.04-arm
             arch: arm64
-            mvn_opts: '-Dmaven.test.failure.ignore=true -am -pl ${{ MODULES }}'
+            mvn_opts: '-Dmaven.test.failure.ignore=true'
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v6
@@ -35,7 +35,7 @@ jobs:
           cache: 'maven'
 
       - name: Run Maven Tests
-        run: mvn clean package -B ${{ matrix.platform.mvn_opts }}
+        run: mvn -am -pl ${{ MODULES }} clean package -B ${{ matrix.platform.mvn_opts }}
   deploy:
     needs: test
     runs-on: ubuntu-latest
