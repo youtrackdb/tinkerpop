@@ -18,10 +18,10 @@ jobs:
         platform:
           - os: ubuntu-latest
             arch: x64
-            mvn_opts: '-Dmaven.test.failure.ignore=true -am -pl ${{ MODULES}}'
+            mvn_opts: '-Dmaven.test.failure.ignore=true -am -pl ${{ MODULES }}'
           - os: ubuntu-24.04-arm
             arch: arm64
-            mvn_opts: '-Dmaven.test.failure.ignore=true -am -pl ${{ MODULES}}'
+            mvn_opts: '-Dmaven.test.failure.ignore=true -am -pl ${{ MODULES }}'
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v6
