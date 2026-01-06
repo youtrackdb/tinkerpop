@@ -35,7 +35,7 @@ jobs:
           cache: 'maven'
 
       - name: Run Maven Tests
-        run: mvn -am -pl ${{ MODULES }} clean package -B ${{ matrix.platform.mvn_opts }}
+        run: mvn -am -pl ${{ env.MODULES }} clean package -B ${{ matrix.platform.mvn_opts }}
   deploy:
     needs: test
     runs-on: ubuntu-latest
