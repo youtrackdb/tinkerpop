@@ -86,10 +86,13 @@ jobs:
 
       - run: |
           echo "Build Java"
-          mvn clean package -B -V -e \
+          mvn -s .github/workflows/settings.xml clean package -B -V -e \
           -am -pl :gremlin-core,:gremlin-driver,:gremlin-server,:gremlin-test,:gremlin-console \
           -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Dspotbugs.skip -Denforcer.skip -Dmaven.javadoc.skip \
           -DskipTests -Dmaven.test.skip.exec -Dlicense.skip=true -Drat.skip=true -Dspotless.check.skip=true
+        env:
+          MAVEN_MIROR_USERNAME: ${{ secrets.MAVEN_MIROR_USERNAME }}
+          MAVEN_MIROR_PASSWORD: ${{ secrets.MAVEN_MIROR_PASSWORD }}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
