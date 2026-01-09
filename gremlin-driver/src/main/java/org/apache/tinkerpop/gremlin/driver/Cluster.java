@@ -509,7 +509,7 @@ public final class Cluster {
         return manager.loadBalancingStrategy;
     }
 
-    AuthProperties authProperties() {
+    public AuthProperties authProperties() {
         return manager.authProps;
     }
 
