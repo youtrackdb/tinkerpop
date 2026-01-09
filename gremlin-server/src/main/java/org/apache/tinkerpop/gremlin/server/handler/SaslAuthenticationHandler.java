@@ -125,7 +125,7 @@ public class SaslAuthenticationHandler extends AbstractAuthenticationHandler {
                 respondWithError(
                         requestMessage,
                         builder -> builder.statusMessage("Authentication did not finish in the allowed duration (" + MAX_REQUEST_DEFERRABLE_DURATION + "s).")
-                                    .code(ResponseStatusCode.UNAUTHORIZED),
+                                .code(ResponseStatusCode.UNAUTHORIZED),
                         ctx);
                 return;
             }
@@ -188,6 +188,7 @@ public class SaslAuthenticationHandler extends AbstractAuthenticationHandler {
                 deferredRequests.getAndSet(null).getValue().forEach(ctx::fireChannelRead);
             }
         } catch (AuthenticationException ae) {
+            negotiator.set(null);
             respondWithError(
                     requestMessage,
                     builder -> builder.statusMessage(ae.getMessage()).code(ResponseStatusCode.UNAUTHORIZED),
