@@ -40,7 +40,14 @@ jobs:
         env:
           MAVEN_MIROR_USERNAME: ${{ secrets.MAVEN_MIROR_USERNAME }}
           MAVEN_MIROR_PASSWORD: ${{ secrets.MAVEN_MIROR_PASSWORD }}
-
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()  # Run this even if Maven crashed for non-test reasons
+        with:
+          files: |
+            target/surefire-reports/*.xml
+            target/failsafe-reports/*.xml
+          action_fail: true
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -83,5 +90,19 @@ jobs:
           topic: 'ci status'
           content: |
             **BUILD FAILED** :rotating_light:
-            Build failed for commit ${{ github.sha }} for repo ${{ github.repository }}.
+            Build failed on branch `${{ github.ref_name }} for commit ${{ github.sha }} for repo ${{ github.repository }}.
+            [View Run Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+      - name: Send Zulip notification
+        if: steps.previous_run.outputs.previous_conclusion == 'failure'
+        uses: zulip/github-actions-zulip/send-message@v1
+        with:
+          api-key: ${{ secrets.ZULIP_API_KEY }}
+          email: ci-status-bot@youtrackdb.zulipchat.com
+          organization-url: 'https://youtrackdb.zulipchat.com'
+          to: 'ytdb'
+          type: 'stream'
+          topic: 'ci status'
+          content: |
+            **BUILD FIXED** :white_check_mark:
+            Build fixed on branch `${{ github.ref_name }}` for commit ${{ github.sha }} for repo ${{ github.repository }}.
             [View Run Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
