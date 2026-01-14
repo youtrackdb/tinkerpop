@@ -396,7 +396,7 @@ public class Settings {
     }
 
 
-    private static Node loadNodeRecursive(Yaml yaml, String currentPath, HashSet<String> loadStack) {
+    protected static Node loadNodeRecursive(Yaml yaml, String currentPath, HashSet<String> loadStack) {
         try {
             if (loadStack.contains(currentPath)) {
                 throw new IllegalStateException("Circular dependency detected: " + currentPath);
@@ -518,7 +518,7 @@ public class Settings {
         }
     }
 
-    private static String normalizeInitialPath(String path) {
+    protected static String normalizeInitialPath(String path) {
         if (path.startsWith(CLASSPATH_PREFIX)) {
             // For classpath, we just ensure consistent slashes
             return path.replace('\\', '/');
@@ -984,7 +984,7 @@ public class Settings {
         public boolean enabled = false;
     }
 
-    private static final class NodeMapper extends Constructor {
+    protected static final class NodeMapper extends Constructor {
         public NodeMapper(LoaderOptions loadingConfig) {
             super(loadingConfig);
         }
