@@ -2,7 +2,7 @@ name: Sync with Upstream
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Run every day at midnight
+    - cron: '0 0 * * 0' # Run every Sunday at midnight
   workflow_dispatch:
     inputs:
       upstream_repo:
@@ -37,10 +37,8 @@ jobs:
         platform:
           - os: ubuntu-latest
             arch: x64
-            mvn_opts: '-Dmaven.test.failure.ignore=true'
           - os: ubuntu-24.04-arm
             arch: arm64
-            mvn_opts: '-Dmaven.test.failure.ignore=true'
     steps:
       - name: Checkout Target Branch
         uses: actions/checkout@v4
