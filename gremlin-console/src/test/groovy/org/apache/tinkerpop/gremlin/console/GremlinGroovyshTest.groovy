@@ -24,6 +24,7 @@ import org.apache.tinkerpop.gremlin.console.jsr223.DriverRemoteAcceptor
 import org.apache.tinkerpop.gremlin.console.jsr223.MockGroovyGremlinShellEnvironment
 import org.apache.tinkerpop.gremlin.jsr223.console.RemoteException
 import org.codehaus.groovy.tools.shell.IO
+import org.junit.Assume
 import org.junit.Test
 
 import java.nio.file.Paths
@@ -38,6 +39,11 @@ class GremlinGroovyshTest extends AbstractGremlinServerIntegrationTest {
 
     @Override
     void setUp() {
+        final String arch = System.getProperty("os.arch")
+        final String vendor = System.getProperty("java.vendor")
+        if ((arch == "aarch64" || arch == "arm64") && vendor != null && vendor.contains("Oracle")) {
+            Assume.assumeTrue("Skipping tests on Oracle JDK on ARM", false)
+        }
         super.setUp()
         out = new ByteArrayOutputStream()
         err = new ByteArrayOutputStream()
