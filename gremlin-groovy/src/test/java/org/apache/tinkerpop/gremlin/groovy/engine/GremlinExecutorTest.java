@@ -73,14 +73,14 @@ public class GremlinExecutorTest {
      * Temporary "useless" plugin definition to force GremlinExecutor to use GremlinScriptEngineManager - will be
      * removed when the old functionality of ScriptEngines is removed.
      */
-    private final Map<String, Map<String,Object>> triggerPlugin = new HashMap<String, Map<String,Object>>() {{
-        put(ImportGremlinPlugin.class.getName(), new HashMap<String,Object>() {{
+    private final Map<String, Map<String, Object>> triggerPlugin = new HashMap<String, Map<String, Object>>() {{
+        put(ImportGremlinPlugin.class.getName(), new HashMap<String, Object>() {{
             put("classImports", Collections.singletonList("java.lang.Math"));
         }});
     }};
 
-    private final Map<String, Map<String,Object>> scriptFilePlugin = new HashMap<String, Map<String,Object>>() {{
-        put(ScriptFileGremlinPlugin.class.getName(), new HashMap<String,Object>() {{
+    private final Map<String, Map<String, Object>> scriptFilePlugin = new HashMap<String, Map<String, Object>>() {{
+        put(ScriptFileGremlinPlugin.class.getName(), new HashMap<String, Object>() {{
             put("files", Collections.singletonList(PATHS.get("GremlinExecutorInit.groovy")));
         }});
     }};
@@ -90,7 +90,7 @@ public class GremlinExecutorTest {
             final List<String> groovyScriptResources = Collections.singletonList("GremlinExecutorInit.groovy");
             for (final String fileName : groovyScriptResources) {
                 PATHS.put(fileName,
-                          Storage.toPath(TestHelper.generateTempFileFromResource(GremlinExecutorTest.class, fileName, "")));
+                        Storage.toPath(TestHelper.generateTempFileFromResource(GremlinExecutorTest.class, fileName, "")));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -174,7 +174,7 @@ public class GremlinExecutorTest {
     @Test
     public void shouldEvalScriptWithMapBindings() throws Exception {
         final GremlinExecutor gremlinExecutor = GremlinExecutor.build().create();
-        final Map<String,Object> b = new HashMap<>();
+        final Map<String, Object> b = new HashMap<>();
         b.put("x", 1);
         assertEquals(2, gremlinExecutor.eval("1+x", b).get());
         gremlinExecutor.close();
@@ -183,7 +183,7 @@ public class GremlinExecutorTest {
     @Test
     public void shouldEvalScriptWithMapBindingsAndLanguage() throws Exception {
         final GremlinExecutor gremlinExecutor = GremlinExecutor.build().create();
-        final Map<String,Object> b = new HashMap<>();
+        final Map<String, Object> b = new HashMap<>();
         b.put("x", 1);
         assertEquals(2, gremlinExecutor.eval("1+x", "gremlin-groovy", b).get());
         gremlinExecutor.close();
@@ -192,7 +192,7 @@ public class GremlinExecutorTest {
     @Test
     public void shouldEvalScriptWithMapBindingsAndLanguageThenTransform() throws Exception {
         final GremlinExecutor gremlinExecutor = GremlinExecutor.build().create();
-        final Map<String,Object> b = new HashMap<>();
+        final Map<String, Object> b = new HashMap<>();
         b.put("x", 1);
         assertEquals(4, gremlinExecutor.eval("1+x", "gremlin-groovy", b, r -> (int) r * 2).get());
         gremlinExecutor.close();
@@ -201,7 +201,7 @@ public class GremlinExecutorTest {
     @Test
     public void shouldEvalScriptWithMapBindingsAndLanguageThenConsume() throws Exception {
         final GremlinExecutor gremlinExecutor = GremlinExecutor.build().create();
-        final Map<String,Object> b = new HashMap<>();
+        final Map<String, Object> b = new HashMap<>();
         b.put("x", 1);
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -400,10 +400,10 @@ public class GremlinExecutorTest {
     @Test
     public void shouldOverrideAfterFailure() throws Exception {
         final AtomicInteger called = new AtomicInteger(0);
-        final GremlinExecutor gremlinExecutor = GremlinExecutor.build().afterFailure((b,t) -> called.set(1)).create();
+        final GremlinExecutor gremlinExecutor = GremlinExecutor.build().afterFailure((b, t) -> called.set(1)).create();
         try {
             gremlinExecutor.eval("10/0", null, new SimpleBindings(),
-                    GremlinExecutor.LifeCycle.build().afterFailure((b,t) -> called.set(200)).create()).get();
+                    GremlinExecutor.LifeCycle.build().afterFailure((b, t) -> called.set(200)).create()).get();
             fail("Should have failed with division by zero");
         } catch (Exception ignored) {
 
@@ -427,7 +427,8 @@ public class GremlinExecutorTest {
         try {
             gremlinExecutor.eval("10/0").get();
             fail();
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
 
         // need to wait long enough for the callback to register
         Thread.sleep(500);
@@ -465,10 +466,10 @@ public class GremlinExecutorTest {
                 .evaluationTimeout(evaluationTimeout)
                 .create();
 
-        final long now = System.currentTimeMillis();
+        final long now = System.nanoTime();
         assertEquals(2, gremlinExecutor.eval("1+1").get());
         gremlinExecutor.close();
-        assertTrue(System.currentTimeMillis() - now < evaluationTimeout);
+        assertTrue((System.nanoTime() - now) / 1000000 < evaluationTimeout);
     }
 
     @Test
@@ -478,10 +479,10 @@ public class GremlinExecutorTest {
                 .evaluationTimeout(evaluationTimeout)
                 .create();
 
-        final long now = System.currentTimeMillis();
+        final long now = System.nanoTime();
         assertEquals(2, gremlinExecutor.eval("1+1").get());
         gremlinExecutor.close();
-        assertTrue(System.currentTimeMillis() - now < evaluationTimeout);
+        assertTrue((System.nanoTime() - now) / 1000000 < evaluationTimeout);
     }
 
     @Test
@@ -551,7 +552,7 @@ public class GremlinExecutorTest {
 
     @Test
     public void shouldInitializeWithScript() throws Exception {
-        final Map<String, Map<String,Object>> config = new HashMap<>();
+        final Map<String, Map<String, Object>> config = new HashMap<>();
         final Map<String, Object> scriptPluginConfig = new HashMap<>();
         scriptPluginConfig.put("files", Collections.singletonList(PATHS.get("GremlinExecutorInit.groovy")));
         config.put(ScriptFileGremlinPlugin.class.getName(), scriptPluginConfig);
@@ -582,7 +583,7 @@ public class GremlinExecutorTest {
 
     @Test
     public void shouldContinueToEvalScriptsEvenWithTimedInterrupt() throws Exception {
-        final Map<String, Map<String,Object>> config = new HashMap<>();
+        final Map<String, Map<String, Object>> config = new HashMap<>();
         final Map<String, Object> scriptPluginConfig = new HashMap<>();
         scriptPluginConfig.put("files", Collections.singletonList(PATHS.get("GremlinExecutorInit.groovy")));
         config.put(ScriptFileGremlinPlugin.class.getName(), scriptPluginConfig);
@@ -613,7 +614,7 @@ public class GremlinExecutorTest {
 
     @Test
     public void shouldInterruptWhile() throws Exception {
-        final Map<String, Map<String,Object>> config = new HashMap<>();
+        final Map<String, Map<String, Object>> config = new HashMap<>();
         final Map<String, Object> scriptPluginConfig = new HashMap<>();
         scriptPluginConfig.put("files", Collections.singletonList(PATHS.get("GremlinExecutorInit.groovy")));
         config.put(ScriptFileGremlinPlugin.class.getName(), scriptPluginConfig);
@@ -638,7 +639,8 @@ public class GremlinExecutorTest {
         t.start();
         Thread.sleep(100);
         t.interrupt();
-        while(t.isAlive()) {}
+        while (t.isAlive()) {
+        }
 
         assertTrue(asserted.get());
     }

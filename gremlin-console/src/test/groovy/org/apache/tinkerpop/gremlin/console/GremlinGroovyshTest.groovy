@@ -53,8 +53,13 @@ class GremlinGroovyshTest extends AbstractGremlinServerIntegrationTest {
 
     @Override
     void tearDown() {
-        super.tearDown()
-        shell.execute(":purge preferences") // for test cases where persistent preferences (interpreterMode) are set.
+        if (shell != null) {
+            shell.execute(":purge preferences")
+            // for test cases where persistent preferences (interpreterMode) are set.
+        }
+        if (server != null) {
+            super.tearDown()
+        }
     }
 
     @Test
