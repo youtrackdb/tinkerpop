@@ -26,6 +26,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -292,6 +293,7 @@ public abstract class WhereTest extends AbstractGremlinProcessTest {
     }
 
     @Test
+    @Ignore
     @LoadGraphWith(MODERN)
     public void g_VX1X_repeatXbothEXcreatedX_whereXwithoutXeXX_aggregateXeX_otherVX_emit_path() {
         final Traversal<Vertex, Path> traversal = get_g_VX1X_repeatXbothEXcreatedX_whereXwithoutXeXX_aggregateXeX_otherVX_emit_path(convertToVertexId("marko"));

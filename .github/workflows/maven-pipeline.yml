@@ -9,12 +9,13 @@ env:
   MODULES: ':gremlin-core,:gremlin-driver,:gremlin-server,:gremlin-test,:gremlin-console'
 jobs:
   test:
-    name: Test on ${{ matrix.platform.os }} - JDK ${{ matrix.java }}
+    name: Test on ${{ matrix.platform.os }} - JDK ${{ matrix.java }} (${{ matrix.distribution }})
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
         java: [ '17' ]
+        distribution: [ 'temurin', 'corretto', 'oracle', 'zulu', 'microsoft']
         platform:
           - os: ubuntu-latest
             arch: x64
@@ -26,11 +27,11 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v6
 
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up JDK ${{ matrix.java }} (${{ matrix.distribution }})
         uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'temurin'
+          distribution: ${{ matrix.distribution }}
           architecture: ${{ matrix.platform.arch }}
           cache: 'maven'
           overwrite-settings: false
@@ -49,7 +50,7 @@ jobs:
           action_fail: true
           large_files: true
           comment_mode: off
-          check_name: Tests Results (${{ matrix.platform.os }}, JDK ${{ matrix.java }})
+          check_name: Tests Results (${{ matrix.platform.os }}, JDK ${{ matrix.java }}, ${{ matrix.distribution }})
   deploy:
     needs: test
     runs-on: ubuntu-latest
