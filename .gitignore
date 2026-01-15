@@ -28,6 +28,7 @@ __pycache__/
 __version__.py
 .glv
 settings.xml
+!.github/workflows/settings.xml
 tools/
 [Dd]ebug/
 [Rr]elease/
