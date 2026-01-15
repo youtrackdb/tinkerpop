@@ -26,9 +26,21 @@ env:
   MODULES: ':gremlin-core,:gremlin-driver,:gremlin-server,:gremlin-test,:gremlin-console'
 
 jobs:
-  sync-and-test:
-    name: Sync ${{ inputs.upstream_repo || 'apache/tinkerpop' }}/${{ inputs.upstream_branch || '3.8-dev' }} to ${{ inputs.target_branch || 'ytdb-fork-3.8-dev' }}
-    runs-on: ubuntu-latest
+  test:
+    name: Test on ${{ matrix.platform.os }} - JDK ${{ matrix.java }} (${{ matrix.distribution }})
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ '17' ]
+        distribution: [ 'temurin', 'corretto', 'oracle', 'zulu', 'microsoft']
+        platform:
+          - os: ubuntu-latest
+            arch: x64
+            mvn_opts: '-Dmaven.test.failure.ignore=true'
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            mvn_opts: '-Dmaven.test.failure.ignore=true'
     steps:
       - name: Checkout Target Branch
         uses: actions/checkout@v4
@@ -51,21 +63,49 @@ jobs:
           echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.TARGET_BRANCH }}..."
           git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-edit
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ matrix.java }} (${{ matrix.distribution }})
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+          distribution: ${{ matrix.distribution }}
+          architecture: ${{ matrix.platform.arch }}
           cache: 'maven'
 
       - name: Run Maven Tests
-        # Using the same test command structure as the main pipeline
+        # We purposely omit ${{ matrix.platform.mvn_opts }} which typically ignores failures,
+        # because we want the job to fail (and stop the sync) if tests fail.
         run: mvn -s .github/workflows/settings.xml -am -pl ${{ env.MODULES }} clean package -B
         env:
           MAVEN_MIROR_USERNAME: ${{ secrets.MAVEN_MIROR_USERNAME }}
           MAVEN_MIROR_PASSWORD: ${{ secrets.MAVEN_MIROR_PASSWORD }}
 
+  sync:
+    name: Sync to Fork
+    needs: test
+    runs-on: ubuntu-latest
+    if: success() # Only run if all test jobs passed
+    steps:
+      - name: Checkout Target Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Add Upstream Remote and Fetch
+        run: |
+          git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git || git remote set-url upstream https://github.com/${{ env.UPSTREAM_REPO }}.git
+          git fetch upstream ${{ env.UPSTREAM_BRANCH }}
+
+      - name: Merge Upstream Changes
+        run: |
+          echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.TARGET_BRANCH }}..."
+          git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-edit
+
       - name: Push Changes to Fork
-        if: success()
         run: |
           git push origin ${{ env.TARGET_BRANCH }}
