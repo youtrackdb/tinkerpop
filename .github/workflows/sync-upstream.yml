@@ -37,8 +37,10 @@ jobs:
         platform:
           - os: ubuntu-latest
             arch: x64
+            mvn_opts: '-Dmaven.test.failure.ignore=true'
           - os: ubuntu-24.04-arm
             arch: arm64
+            mvn_opts: '-Dmaven.test.failure.ignore=true'
     steps:
       - name: Checkout Target Branch
         uses: actions/checkout@v4
@@ -70,10 +72,21 @@ jobs:
           cache: 'maven'
 
       - name: Run Maven Tests
-        run: mvn -s .github/workflows/settings.xml -am -pl ${{ env.MODULES }} clean package -B
+        run: mvn -s .github/workflows/settings.xml -am -pl ${{ env.MODULES }} clean package -B ${{ matrix.platform.mvn_opts }}
         env:
           MAVEN_MIROR_USERNAME: ${{ secrets.MAVEN_MIROR_USERNAME }}
           MAVEN_MIROR_PASSWORD: ${{ secrets.MAVEN_MIROR_PASSWORD }}
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: |
+            **/target/surefire-reports/TEST-*.xml
+            **/target/failsafe-reports/TEST-*.xml
+          action_fail: true
+          large_files: true
+          comment_mode: off
+          check_name: Tests Results (${{ matrix.platform.os }}, JDK ${{ matrix.java }}, ${{ matrix.distribution }})
 
   sync:
     name: Sync to Fork
