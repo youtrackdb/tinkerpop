@@ -18,7 +18,8 @@
  */
 package org.apache.tinkerpop.gremlin.server.handler;
 
-import com.codahale.metrics.Meter;
+
+import io.dropwizard.metrics5.Meter;
 import org.apache.tinkerpop.gremlin.util.MessageSerializer;
 import org.apache.tinkerpop.gremlin.util.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.util.message.ResponseStatusCode;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import static io.dropwizard.metrics5.MetricRegistry.name;
 
 /**
  * Ensures that any {@link ResponseMessage} manages to get converted to a {@link Frame}. By converting to {@link Frame}

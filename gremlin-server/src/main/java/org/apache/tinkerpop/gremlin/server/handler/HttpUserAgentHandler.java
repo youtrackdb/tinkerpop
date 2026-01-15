@@ -18,7 +18,8 @@
  */
 package org.apache.tinkerpop.gremlin.server.handler;
 
-import com.codahale.metrics.MetricRegistry;
+import io.dropwizard.metrics5.MetricName;
+import io.dropwizard.metrics5.MetricRegistry;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpMessage;
@@ -49,7 +50,7 @@ public class HttpUserAgentHandler extends ChannelInboundHandlerAdapter {
                 ctx.channel().attr(USER_AGENT_ATTR_KEY).set(userAgent);
                 logger.debug("New Connection on channel [{}] with user agent [{}]", ctx.channel().id().asShortText(), userAgent);
 
-                String metricName = MetricRegistry.name(GremlinServer.class, "user-agent", userAgent);
+                MetricName metricName = MetricRegistry.name(GremlinServer.class, "user-agent", userAgent);
 
                 // This check is to address a concern that an attacker may try to fill the server's memory with a very
                 // large number of unique user agents. For this reason the user agent is replaced with "other"

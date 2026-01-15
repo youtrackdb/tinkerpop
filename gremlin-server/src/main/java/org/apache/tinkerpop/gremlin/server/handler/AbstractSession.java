@@ -18,8 +18,8 @@
  */
 package org.apache.tinkerpop.gremlin.server.handler;
 
-import com.codahale.metrics.Timer;
 import groovy.lang.GroovyRuntimeException;
+import io.dropwizard.metrics5.Timer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.exception.ExceptionUtils;

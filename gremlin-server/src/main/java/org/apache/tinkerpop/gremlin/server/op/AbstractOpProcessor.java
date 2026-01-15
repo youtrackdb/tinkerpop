@@ -18,7 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.server.op;
 
-import com.codahale.metrics.Meter;
+import io.dropwizard.metrics5.Meter;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -53,7 +53,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import static io.dropwizard.metrics5.MetricRegistry.name;
 
 /**
  * A base {@link OpProcessor} implementation that processes an {@code Iterator} of results in a generalized way while

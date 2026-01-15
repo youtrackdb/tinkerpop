@@ -18,7 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.server.handler;
 
-import com.codahale.metrics.Meter;
+import io.dropwizard.metrics5.Meter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -58,7 +58,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import static io.dropwizard.metrics5.MetricRegistry.name;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpMethod.POST;

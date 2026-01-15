@@ -18,22 +18,10 @@
  */
 package org.apache.tinkerpop.gremlin.server.util;
 
-import com.codahale.metrics.ConsoleReporter;
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.CsvReporter;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.JmxReporter;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricFilter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Slf4jReporter;
-import com.codahale.metrics.Timer;
-import com.codahale.metrics.ganglia.GangliaReporter;
-import com.codahale.metrics.graphite.Graphite;
-import com.codahale.metrics.graphite.GraphiteReporter;
-import info.ganglia.gmetric4j.gmetric.GMetric;
+import io.dropwizard.metrics5.*;
+import io.dropwizard.metrics5.graphite.Graphite;
+import io.dropwizard.metrics5.graphite.GraphiteReporter;
+import io.dropwizard.metrics5.jmx.JmxReporter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
@@ -67,7 +55,6 @@ public enum MetricManager {
     private CsvReporter csvReporter = null;
     private JmxReporter jmxReporter = null;
     private Slf4jReporter slf4jReporter = null;
-    private GangliaReporter gangliaReporter = null;
     private GraphiteReporter graphiteReporter = null;
 
     /**
@@ -261,77 +248,6 @@ public enum MetricManager {
     }
 
     /**
-     * Create a {@link GangliaReporter} attached to the {@code MetricsRegistry}.
-     * <p/>
-     * {@code groupOrHost} and {@code addressingMode} must be non-null. The
-     * remaining non-primitive arguments may be null. If {@code protocol31} is
-     * null, then true is assumed. Null values of {@code hostUUID} or
-     * {@code spoof} are passed into the {@link GMetric} constructor, which
-     * causes Ganglia to use its internal logic for generating a default UUID
-     * and default reporting hostname (respectively).
-     *
-     * @param groupOrHost        the multicast group or unicast hostname to which Ganglia
-     *                           events are sent
-     * @param port               the port to which events are sent
-     * @param addressingMode     whether to send events with multicast or unicast
-     * @param ttl                multicast ttl (ignored for unicast)
-     * @param protocol31         true to use Ganglia protocol version 3.1, false to use 3.0
-     * @param hostUUID           uuid for the host
-     * @param spoof              override this machine's IP/hostname as it appears on the
-     *                           Ganglia server
-     * @param reportIntervalInMS milliseconds to wait before sending data to the ganglia
-     *                           unicast host or multicast group
-     * @throws IOException when a {@link GMetric} can't be instantiated using the
-     *                     provided arguments
-     */
-    public synchronized void addGangliaReporter(final String groupOrHost, final int port,
-                                                final String addressingMode, final int ttl, final Boolean protocol31,
-                                                final UUID hostUUID, final String spoof, final long reportIntervalInMS) throws IOException {
-        if (null == groupOrHost || groupOrHost.isEmpty())
-            throw new IllegalArgumentException("groupOrHost cannot be null or empty");
-
-        if (null == addressingMode)
-            throw new IllegalArgumentException("addressing mode cannot be null");
-
-        GMetric.UDPAddressingMode gmetricAddressingMode;
-        try {
-            gmetricAddressingMode = GMetric.UDPAddressingMode.valueOf(addressingMode);
-        } catch (IllegalArgumentException iae) {
-            throw new IllegalArgumentException("addressing mode must be MULTICAST or UNICAST");
-        }
-
-        if (null != gangliaReporter) {
-            log.debug("Metrics GangliaReporter already active; not creating another");
-            return;
-        }
-
-        final boolean protocol = null == protocol31 ? true : protocol31;
-        final GMetric ganglia = new GMetric(groupOrHost, port, gmetricAddressingMode, ttl,
-                protocol, hostUUID, spoof);
-
-        final GangliaReporter.Builder b = GangliaReporter.forRegistry(getRegistry());
-
-        gangliaReporter = b.build(ganglia);
-        gangliaReporter.start(reportIntervalInMS, TimeUnit.MILLISECONDS);
-
-        log.info("Configured Ganglia Metrics reporter host={} interval={}ms port={} addrmode={} ttl={} proto31={} uuid={} spoof={}",
-                new Object[]{groupOrHost, reportIntervalInMS, port, addressingMode, ttl, protocol31, hostUUID, spoof});
-    }
-
-    /**
-     * Stop a {@link GangliaReporter} previously created by a call to
-     * addGangliaReporter(String, int, GMetric.UDPAddressingMode, int, Boolean, UUID, long)
-     * and release it for GC. Idempotent between calls to the associated add
-     * method. Does nothing before the first call to the associated add method.
-     */
-    public synchronized void removeGangliaReporter() {
-        if (null != gangliaReporter)
-            gangliaReporter.stop();
-
-        gangliaReporter = null;
-    }
-
-    /**
      * Create a {@link GraphiteReporter} attached to the {@code MetricsRegistry}.
      * <p/>
      * If {@code prefix} is null, then Metrics's internal default prefix is used
@@ -385,7 +301,6 @@ public enum MetricManager {
         removeCsvReporter();
         removeJmxReporter();
         removeSlf4jReporter();
-        removeGangliaReporter();
         removeGraphiteReporter();
     }
 
@@ -397,11 +312,11 @@ public enum MetricManager {
         return INSTANCE.getRegistry().getCounters().size();
     }
 
-    public boolean contains(String name) {
+    public boolean contains(MetricName name) {
         return INSTANCE.getRegistry().getNames().contains(name);
     }
 
-    public Counter getCounter(final String name) {
+    public Counter getCounter(final MetricName name) {
         return getRegistry().counter(name);
     }
 
@@ -409,18 +324,14 @@ public enum MetricManager {
         return getRegistry().counter(MetricRegistry.name(prefix, names));
     }
 
-    public <T> Gauge<T> getGauge(final Gauge<T> gauge, final String name) {
+    public <T> Gauge<T> getGauge(final Gauge<T> gauge, final MetricName name) {
         if (contains(name))
-            return getRegistry().getGauges((s, metric) -> s.equals(name)).values().stream().findFirst().get();
+            return (Gauge<T>) getRegistry().getGauges((s, metric) -> s.equals(name)).values().stream().findFirst().get();
         else
             return getRegistry().register(name, gauge);
     }
 
-    public <T> Gauge<T> getGauge(final Gauge<T> gauge, final String prefix, final String... names) {
-        return getGauge(gauge, MetricRegistry.name(prefix, names));
-    }
-
-    public Meter getMeter(final String name) {
+    public Meter getMeter(final MetricName name) {
         return getRegistry().meter(name);
     }
 
@@ -428,7 +339,7 @@ public enum MetricManager {
         return getRegistry().meter(MetricRegistry.name(prefix, names));
     }
 
-    public Timer getTimer(final String name) {
+    public Timer getTimer(final MetricName name) {
         return getRegistry().timer(name);
     }
 
@@ -453,7 +364,7 @@ public enum MetricManager {
         // only register if metrics aren't already registered. typically only happens in testing where two gremlin
         // server instances are running in the same jvm. they will share the same metrics if that is the case since
         // the MetricsManager is static
-        if (engine instanceof GremlinGroovyScriptEngine && getRegistry().getNames().stream().noneMatch(n -> n.endsWith("long-run-compilation-count"))) {
+        if (engine instanceof GremlinGroovyScriptEngine && getRegistry().getNames().stream().noneMatch(n -> n.getKey().endsWith("long-run-compilation-count"))) {
             final GremlinGroovyScriptEngine gremlinGroovyScriptEngine = (GremlinGroovyScriptEngine) engine;
             getRegistry().register(
                     MetricRegistry.name(GremlinServer.class, ArrayUtils.add(prefix, "long-run-compilation-count")),

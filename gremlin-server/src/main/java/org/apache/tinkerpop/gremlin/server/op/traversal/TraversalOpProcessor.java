@@ -18,7 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.server.op.traversal;
 
-import com.codahale.metrics.Timer;
+import io.dropwizard.metrics5.Timer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelHandlerContext;
@@ -68,7 +68,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import static io.dropwizard.metrics5.MetricRegistry.name;
 
 /**
  * Simple {@link OpProcessor} implementation that iterates remotely submitted serialized {@link Traversal} objects.

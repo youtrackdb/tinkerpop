@@ -18,7 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.server.op;
 
-import com.codahale.metrics.Timer;
+import io.dropwizard.metrics5.Timer;
 import org.apache.tinkerpop.gremlin.util.Tokens;
 import org.apache.tinkerpop.gremlin.util.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.util.message.ResponseMessage;
@@ -61,7 +61,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import static io.dropwizard.metrics5.MetricRegistry.name;
 
 /**
  * A base {@link OpProcessor} implementation that helps with operations that deal with script evaluation functions.

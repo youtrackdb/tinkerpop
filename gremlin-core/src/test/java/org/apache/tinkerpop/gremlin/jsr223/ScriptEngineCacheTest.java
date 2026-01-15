@@ -37,6 +37,8 @@ public class ScriptEngineCacheTest {
 
     @Test
     public void shouldGetEngineFromCache() {
+        String javaVendor = System.getProperty("java.vendor");
+        assumeThat("Does not run on Oracle JDK.", javaVendor.toLowerCase().contains("oracle"), is(false));
         String javaVersion = System.getProperty("java.version");
         int majorVersion = Integer.parseInt(javaVersion.substring(0, javaVersion.indexOf('.')));
         assumeThat("Requires lower than JDK 14.", majorVersion < 14, is(true));

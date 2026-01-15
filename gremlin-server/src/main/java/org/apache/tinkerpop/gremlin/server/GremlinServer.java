@@ -425,17 +425,6 @@ public class GremlinServer {
             if (config.enabled) metrics.addSlf4jReporter(config.interval, config.loggerName);
         });
 
-        settings.optionalGangliaReporter().ifPresent(config -> {
-            if (config.enabled) {
-                try {
-                    metrics.addGangliaReporter(config.host, config.port,
-                            config.addressingMode, config.ttl, config.protocol31, config.hostUUID, config.spoof, config.interval);
-                } catch (IOException ioe) {
-                    logger.warn("Error configuring the Ganglia Reporter.", ioe);
-                }
-            }
-        });
-
         settings.optionalGraphiteReporter().ifPresent(config -> {
             if (config.enabled) metrics.addGraphiteReporter(config.host, config.port, config.prefix, config.interval);
         });

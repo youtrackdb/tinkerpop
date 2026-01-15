@@ -18,7 +18,7 @@
  */
 package org.apache.tinkerpop.gremlin.server.handler;
 
-import com.codahale.metrics.Timer;
+import io.dropwizard.metrics5.Timer;
 import io.netty.channel.Channel;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.util.MetricManager;
@@ -27,7 +27,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import static io.dropwizard.metrics5.MetricRegistry.name;
+
 
 /**
  * Requests that arrive through the {@link UnifiedHandler} are all processed within a {@code Session} implementation.

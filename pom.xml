@@ -176,7 +176,7 @@ limitations under the License.
         <junit.version>4.13.1</junit.version>
         <kerby.version>2.0.1</kerby.version>
         <logback.version>1.2.13</logback.version>
-        <metrics.version>3.0.2</metrics.version>
+        <metrics.version>5.0.5</metrics.version>
         <mockito.version>5.19.0</mockito.version>
         <netty.version>4.1.125.Final</netty.version>
         <slf4j.version>1.7.25</slf4j.version>
@@ -833,7 +833,7 @@ limitations under the License.
                 <version>${ayza.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.codahale.metrics</groupId>
+                <groupId>io.dropwizard.metrics5</groupId>
                 <artifactId>metrics-core</artifactId>
                 <version>${metrics.version}</version>
                 <exclusions>
@@ -845,7 +845,7 @@ limitations under the License.
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.codahale.metrics</groupId>
+                <groupId>io.dropwizard.metrics5</groupId>
                 <artifactId>metrics-graphite</artifactId>
                 <version>${metrics.version}</version>
                 <optional>true</optional>
@@ -858,20 +858,14 @@ limitations under the License.
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.codahale.metrics</groupId>
-                <artifactId>metrics-ganglia</artifactId>
+                <groupId>io.dropwizard.metrics5</groupId>
+                <artifactId>metrics-jmx</artifactId>
                 <version>${metrics.version}</version>
-                <optional>true</optional>
                 <exclusions>
                     <!-- conflict with jcl-over-slf4j-->
                     <exclusion>
                         <groupId>org.slf4j</groupId>
                         <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <!-- LGPL licensed - users will need to install this jar manually -->
-                    <exclusion>
-                        <groupId>org.acplt</groupId>
-                        <artifactId>oncrpc</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1529,18 +1523,13 @@ limitations under the License.
                                             <version>${commons.text.version}</version>
                                         </additionalDependency>
                                         <additionalDependency>
-                                            <groupId>com.codahale.metrics</groupId>
+                                            <groupId>io.dropwizard.metrics5</groupId>
                                             <artifactId>metrics-core</artifactId>
                                             <version>${metrics.version}</version>
                                         </additionalDependency>
                                         <additionalDependency>
-                                            <groupId>com.codahale.metrics</groupId>
+                                            <groupId>io.dropwizard.metrics5</groupId>
                                             <artifactId>metrics-graphite</artifactId>
-                                            <version>${metrics.version}</version>
-                                        </additionalDependency>
-                                        <additionalDependency>
-                                            <groupId>com.codahale.metrics</groupId>
-                                            <artifactId>metrics-ganglia</artifactId>
                                             <version>${metrics.version}</version>
                                         </additionalDependency>
                                         <additionalDependency>

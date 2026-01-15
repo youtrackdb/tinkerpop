@@ -18,8 +18,8 @@
  */
 package org.apache.tinkerpop.gremlin.server.util;
 
-import com.codahale.metrics.Gauge;
-import io.netty.channel.Channel;
+
+import io.dropwizard.metrics5.Gauge;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -49,7 +49,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import static io.dropwizard.metrics5.MetricRegistry.name;
 
 /**
  * The core of script execution in Gremlin Server.  Given {@link Settings} and optionally other arguments, this

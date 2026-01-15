@@ -72,8 +72,7 @@ limitations under the License.
             <excludes>
                 <exclude>org.apache.tinkerpop:gremlin-groovy</exclude>
                 <exclude>org.apache.tinkerpop:tinkergraph-gremlin</exclude>
-                <exclude>com.codahale.metrics:metrics-graphite</exclude>
-                <exclude>com.codahale.metrics:metrics-ganglia</exclude>
+                <exclude>io.dropwizard.metrics:metrics-graphite</exclude>
                 <exclude>info.ganglia.gmetric4j:gmetric4j</exclude>
                 <!-- LGPL licensed org.acplt:oncrpc is excluded in the <dependencyManagement> of the root pom -->
             </excludes>
