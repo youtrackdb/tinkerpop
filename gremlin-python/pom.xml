@@ -21,7 +21,8 @@ limitations under the License.
     <parent>
         <groupId>org.apache.tinkerpop</groupId>
         <artifactId>tinkerpop</artifactId>
-        <version>3.8.1-SNAPSHOT</version>
+        <version>${revision}${sha1}${changelist}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>gremlin-python</artifactId>
     <name>Apache TinkerPop :: Gremlin Python</name>

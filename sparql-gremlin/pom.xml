@@ -21,7 +21,8 @@ limitations under the License.
     <parent>
         <artifactId>tinkerpop</artifactId>
         <groupId>org.apache.tinkerpop</groupId>
-        <version>3.8.1-SNAPSHOT</version>
+        <version>${revision}${sha1}${changelist}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>sparql-gremlin</artifactId>
     <name>Apache TinkerPop :: SPARQL Gremlin</name>

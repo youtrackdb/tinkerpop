@@ -5,7 +5,8 @@
     <parent>
         <artifactId>gremlin-tools</artifactId>
         <groupId>org.apache.tinkerpop</groupId>
-        <version>3.8.1-SNAPSHOT</version>
+        <version>${revision}${sha1}${changelist}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
