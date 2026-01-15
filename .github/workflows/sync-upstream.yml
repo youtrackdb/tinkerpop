@@ -60,7 +60,7 @@ jobs:
 
       - name: Merge Upstream Changes
         run: |
-          echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.TARGET_BRANCH }}..."
+          echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.TARGET_BRANCH }}"...
           git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-edit
 
       - name: Set up JDK ${{ matrix.java }} (${{ matrix.distribution }})
@@ -103,9 +103,80 @@ jobs:
 
       - name: Merge Upstream Changes
         run: |
-          echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.TARGET_BRANCH }}..."
+          echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.TARGET_BRANCH }}"...
           git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-edit
 
       - name: Push Changes to Fork
         run: |
           git push origin ${{ env.TARGET_BRANCH }}
+
+  notify-failure:
+    name: Notify build failure on Zulip
+    needs: [test, sync]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v6
+
+      - name: Determine Branch Name
+        id: branch_name
+        run: |
+           echo "branch=${{ env.TARGET_BRANCH }}" >> $GITHUB_OUTPUT
+
+      - name: Send Zulip notification
+        uses: zulip/github-actions-zulip/send-message@v1
+        with:
+          api-key: ${{ secrets.ZULIP_API_KEY }}
+          email: ci-status-bot@youtrackdb.zulipchat.com
+          organization-url: 'https://youtrackdb.zulipchat.com'
+          to: 'ytdb'
+          type: 'stream'
+          topic: 'ci status'
+          content: |
+            **BUILD FAILED** :rotating_light:
+            Build failed on branch `${{ steps.branch_name.outputs.branch }}` for commit ${{ github.sha }} for repo ${{ github.repository }}.
+            [View Run Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+  notify-fixed:
+    name: Notify build fixed on Zulip
+    needs: [test, sync]
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v6
+
+      - name: Determine Branch Name
+        id: branch_name
+        run: |
+           echo "branch=${{ env.TARGET_BRANCH }}" >> $GITHUB_OUTPUT
+
+      - name: Get Previous Run Status
+        id: previous_run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous_conclusion=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --branch "${{ steps.branch_name.outputs.branch }}" \
+            --workflow "${{ github.workflow }}" \
+            --limit 2 \
+            --json conclusion \
+            --jq '.[1].conclusion')
+          echo "previous_conclusion=$previous_conclusion" >> $GITHUB_OUTPUT
+
+      - name: Send Zulip notification
+        if: steps.previous_run.outputs.previous_conclusion == 'failure'
+        uses: zulip/github-actions-zulip/send-message@v1
+        with:
+          api-key: ${{ secrets.ZULIP_API_KEY }}
+          email: ci-status-bot@youtrackdb.zulipchat.com
+          organization-url: 'https://youtrackdb.zulipchat.com'
+          to: 'ytdb'
+          type: 'stream'
+          topic: 'ci status'
+          content: |
+            **BUILD FIXED** :white_check_mark:
+            Build fixed on branch `${{ steps.branch_name.outputs.branch }}` for commit ${{ github.sha }} for repo ${{ github.repository }}.
+            [View Run Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
