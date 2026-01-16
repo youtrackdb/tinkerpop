@@ -20,7 +20,7 @@ limitations under the License.
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>tinkerpop</artifactId>
-        <groupId>org.apache.tinkerpop</groupId>
+        <groupId>io.youtrackdb</groupId>
         <version>${revision}${sha1}${changelist}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -35,7 +35,7 @@ limitations under the License.
             <version>3.12.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-core</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -45,7 +45,7 @@ limitations under the License.
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>tinkergraph-gremlin</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

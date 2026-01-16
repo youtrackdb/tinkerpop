@@ -19,7 +19,7 @@ limitations under the License.
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.tinkerpop</groupId>
+        <groupId>io.youtrackdb</groupId>
         <artifactId>tinkerpop</artifactId>
         <version>${revision}${sha1}${changelist}</version>
         <relativePath>../pom.xml</relativePath>
@@ -28,12 +28,12 @@ limitations under the License.
     <name>Apache TinkerPop :: Gremlin Driver</name>
     <dependencies>
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-util</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -53,20 +53,20 @@ limitations under the License.
         </dependency>
         <!-- TinkerGraph is an optional dependency that is only required if doing deserialization of Graph instances -->
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>tinkergraph-gremlin</artifactId>
             <version>${project.version}</version>
             <optional>true</optional>
         </dependency>
         <!-- TEST -->
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-test</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-socket-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

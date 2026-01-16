@@ -66,7 +66,7 @@
 
         <!-- Gremlin driver (remote to Gremlin Server) -->
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-driver</artifactId>
             <version>${tinkerpop.version}</version>
         </dependency>

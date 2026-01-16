@@ -30,7 +30,7 @@ limitations under the License.
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-driver</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -40,7 +40,7 @@ limitations under the License.
             <version>${logback.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
+            <groupId>io.youtrackdb</groupId>
             <artifactId>gremlin-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
