@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref_name == 'ytdb-fork-3.8-dev' # Only deploy on push to ytdb-fork-3.8-dev branch
     env:
-      MAVEN_DEPLOY_REPO: "central::default::https://oss.sonatype.org/content/repositories/snapshots"
+      MAVEN_DEPLOY_REPO: "central::https://oss.sonatype.org/content/repositories/snapshots"
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v6
