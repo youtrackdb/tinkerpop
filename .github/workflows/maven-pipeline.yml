@@ -80,6 +80,12 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           MAVEN_MIROR_USERNAME: ${{ secrets.MAVEN_MIROR_USERNAME }}
           MAVEN_MIROR_PASSWORD: ${{ secrets.MAVEN_MIROR_PASSWORD }}
+
+      - name: Get Version and Create Annotation
+        run: |
+          VERSION=$(mvn -s .github/workflows/settings.xml help:evaluate -Dexpression=project.version -q -DforceStdout -Dsha1=-${{ steps.vars.outputs.sha_short }})
+          echo "Published version: $VERSION"
+          echo "::notice title=Published Maven Artifacts::Version: $VERSION"
   notify-failure:
     name: Notify build failure on Zulip
     needs: [ test, deploy]
