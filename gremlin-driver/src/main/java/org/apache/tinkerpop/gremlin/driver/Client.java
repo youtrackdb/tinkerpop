@@ -66,7 +66,7 @@ import static org.apache.tinkerpop.gremlin.driver.RequestOptions.getRequestOptio
  *
  * @author Stephen Mallette (http://stephen.genoprime.com)
  */
-public abstract class Client {
+public abstract class Client implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
     public static final String TOO_MANY_IN_FLIGHT_REQUESTS = "Number of active requests exceeds pool size. " +

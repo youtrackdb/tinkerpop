@@ -322,9 +322,10 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
     }
 
     protected void beforeProcessing(final Graph graph, final Context ctx) {
-      final GraphManager graphManager = ctx.getGraphManager();
-      final RequestMessage msg = ctx.getRequestMessage();
-      graphManager.beforeQueryStart(msg);
+        final GraphManager graphManager = ctx.getGraphManager();
+        final RequestMessage msg = ctx.getRequestMessage();
+
+        graphManager.beforeQueryStart(msg);
         if (graph.features().graph().supportsTransactions() && graph.tx().isOpen()) graph.tx().rollback();
     }
 
@@ -422,7 +423,8 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                     // serialize here because in sessionless requests the serialization must occur in the same
                     // thread as the eval.  as eval occurs in the GremlinExecutor there's no way to get back to the
                     // thread that processed the eval of the script so, we have to push serialization down into that
-                    final Map<String, Object> metadata = generateResultMetaData(nettyContext, msg, code, itty, settings);
+                    beforeResponseGeneration(context, msg, itty, graph);
+                    final Map<String, Object> metadata = generateResultMetaData(context, msg, code, itty, settings);
                     final Map<String, Object> statusAttrb = generateStatusAttributes(nettyContext, msg, code, itty, settings);
                     Frame frame = null;
                     try {

@@ -33,116 +33,125 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * A queue of incoming {@link Result} objects.  The queue is updated by the {@link Handler.GremlinResponseHandler}
- * until a response terminator is identified.
+ * A queue of incoming {@link Result} objects.  The queue is updated by the {@link Handler.GremlinResponseHandler} until
+ * a response terminator is identified.
  *
  * @author Stephen Mallette (http://stephen.genoprime.com)
  */
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-final class ResultQueue {
+public final class ResultQueue {
 
-    private final LinkedBlockingQueue<Result> resultLinkedBlockingQueue;
+  private final LinkedBlockingQueue<Result> resultLinkedBlockingQueue;
 
-    private final AtomicReference<Throwable> error = new AtomicReference<>();
+  private final AtomicReference<Throwable> error = new AtomicReference<>();
 
-    private final CompletableFuture<Void> readComplete;
+  private final CompletableFuture<Void> readComplete;
 
-    private final Queue<Pair<CompletableFuture<List<Result>>,Integer>> waiting = new ConcurrentLinkedQueue<>();
+  private final Queue<Pair<CompletableFuture<List<Result>>, Integer>> waiting = new ConcurrentLinkedQueue<>();
 
-    private Map<String,Object> statusAttributes = null;
+  private Map<String, Object> statusAttributes = null;
 
-    public ResultQueue(final LinkedBlockingQueue<Result> resultLinkedBlockingQueue, final CompletableFuture<Void> readComplete) {
-        this.resultLinkedBlockingQueue = resultLinkedBlockingQueue;
-        this.readComplete = readComplete;
+  public ResultQueue(final LinkedBlockingQueue<Result> resultLinkedBlockingQueue,
+      final CompletableFuture<Void> readComplete) {
+    this.resultLinkedBlockingQueue = resultLinkedBlockingQueue;
+    this.readComplete = readComplete;
+  }
+
+  /**
+   * Adds a {@link Result} to the queue which will be later read by the {@link ResultSet}.
+   *
+   * @param result a return value from the {@link Traversal} or script submitted for execution
+   */
+  public void add(final Result result) {
+    this.resultLinkedBlockingQueue.offer(result);
+    tryDrainNextWaiting(false);
+  }
+
+  public CompletableFuture<List<Result>> await(final int items) {
+    final CompletableFuture<List<Result>> result = new CompletableFuture<>();
+    waiting.add(Pair.with(result, items));
+
+    tryDrainNextWaiting(false);
+
+    return result;
+  }
+
+  public int size() {
+    if (error.get() != null) {
+      throw new RuntimeException(error.get());
     }
+    return this.resultLinkedBlockingQueue.size();
+  }
 
-    /**
-     * Adds a {@link Result} to the queue which will be later read by the {@link ResultSet}.
-     *
-     * @param result a return value from the {@link Traversal} or script submitted for execution
-     */
-    public void add(final Result result) {
-        this.resultLinkedBlockingQueue.offer(result);
-        tryDrainNextWaiting(false);
+  public boolean isEmpty() {
+    if (error.get() != null) {
+      throw new RuntimeException(error.get());
     }
+    return this.size() == 0;
+  }
 
-    public CompletableFuture<List<Result>> await(final int items) {
-        final CompletableFuture<List<Result>> result = new CompletableFuture<>();
-        waiting.add(Pair.with(result, items));
+  public boolean isComplete() {
+    return readComplete.isDone();
+  }
 
-        tryDrainNextWaiting(false);
-
-        return result;
+  void drainTo(final Collection<Result> collection) {
+    if (error.get() != null) {
+      throw new RuntimeException(error.get());
     }
+    resultLinkedBlockingQueue.drainTo(collection);
+  }
 
-    public int size() {
-        if (error.get() != null) throw new RuntimeException(error.get());
-        return this.resultLinkedBlockingQueue.size();
+  public void markComplete(final Map<String, Object> statusAttributes) {
+    this.statusAttributes = null == statusAttributes ? Collections.emptyMap() : statusAttributes;
+
+    this.readComplete.complete(null);
+
+    this.drainAllWaiting();
+  }
+
+  public void markError(final Throwable throwable) {
+    error.set(throwable);
+    this.readComplete.completeExceptionally(throwable);
+    this.drainAllWaiting();
+  }
+
+  Map<String, Object> getStatusAttributes() {
+    return statusAttributes;
+  }
+
+  /**
+   * Completes the next waiting future if there is one.
+   */
+  private synchronized void tryDrainNextWaiting(final boolean force) {
+    // need to peek because the number of available items needs to be >= the expected size for that future. if not
+    // it needs to keep waiting
+    final Pair<CompletableFuture<List<Result>>, Integer> nextWaiting = waiting.peek();
+    if (nextWaiting != null && (force || (resultLinkedBlockingQueue.size() >= nextWaiting.getValue1()
+        || readComplete.isDone()))) {
+      final int items = nextWaiting.getValue1();
+      final CompletableFuture<List<Result>> future = nextWaiting.getValue0();
+      final List<Result> results = new ArrayList<>(items);
+      resultLinkedBlockingQueue.drainTo(results, items);
+
+      // it's important to check for error here because a future may have already been queued in "waiting" prior
+      // to the first response back from the server. if that happens, any "waiting" futures should be completed
+      // exceptionally otherwise it will look like success.
+      if (null == error.get()) {
+        future.complete(results);
+      } else {
+        future.completeExceptionally(error.get());
+      }
+
+      waiting.remove(nextWaiting);
     }
+  }
 
-    public boolean isEmpty() {
-        if (error.get() != null) throw new RuntimeException(error.get());
-        return this.size() == 0;
+  /**
+   * Completes all remaining futures.
+   */
+  private void drainAllWaiting() {
+    while (!waiting.isEmpty()) {
+      tryDrainNextWaiting(true);
     }
-
-    public boolean isComplete() {
-        return readComplete.isDone();
-    }
-
-    void drainTo(final Collection<Result> collection) {
-        if (error.get() != null) throw new RuntimeException(error.get());
-        resultLinkedBlockingQueue.drainTo(collection);
-    }
-
-    void markComplete(final Map<String,Object> statusAttributes) {
-        this.statusAttributes = null == statusAttributes ? Collections.emptyMap() : statusAttributes;
-
-        this.readComplete.complete(null);
-
-        this.drainAllWaiting();
-    }
-
-    void markError(final Throwable throwable) {
-        error.set(throwable);
-        this.readComplete.completeExceptionally(throwable);
-        this.drainAllWaiting();
-    }
-
-    Map<String,Object> getStatusAttributes() {
-        return statusAttributes;
-    }
-
-    /**
-     * Completes the next waiting future if there is one.
-     */
-    private synchronized void tryDrainNextWaiting(final boolean force) {
-        // need to peek because the number of available items needs to be >= the expected size for that future. if not
-        // it needs to keep waiting
-        final Pair<CompletableFuture<List<Result>>, Integer> nextWaiting = waiting.peek();
-        if (nextWaiting != null && (force || (resultLinkedBlockingQueue.size() >= nextWaiting.getValue1() || readComplete.isDone()))) {
-            final int items = nextWaiting.getValue1();
-            final CompletableFuture<List<Result>> future = nextWaiting.getValue0();
-            final List<Result> results = new ArrayList<>(items);
-            resultLinkedBlockingQueue.drainTo(results, items);
-
-            // it's important to check for error here because a future may have already been queued in "waiting" prior
-            // to the first response back from the server. if that happens, any "waiting" futures should be completed
-            // exceptionally otherwise it will look like success.
-            if (null == error.get())
-                future.complete(results);
-            else
-                future.completeExceptionally(error.get());
-
-            waiting.remove(nextWaiting);
-        }
-    }
-
-    /**
-     * Completes all remaining futures.
-     */
-    private void drainAllWaiting() {
-        while (!waiting.isEmpty()) {
-            tryDrainNextWaiting(true);
-        }
-    }
+  }
 }

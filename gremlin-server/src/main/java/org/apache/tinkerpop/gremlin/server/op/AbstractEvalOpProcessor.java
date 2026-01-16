@@ -268,6 +268,7 @@ public abstract class AbstractEvalOpProcessor extends AbstractOpProcessor {
                         handleIterator(ctx, itty);
                         graphManager.onQuerySuccess(msg);
                     } catch (Exception ex) {
+                        graphManager.onQueryError(msg, ex);
                         if (managedTransactionsForRequest) attemptRollback(msg, ctx.getGraphManager(), settings.strictTransactionManagement);
 
                         CloseableIterator.closeIterator(itty);

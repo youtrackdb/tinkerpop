@@ -701,7 +701,8 @@ public class SessionOpProcessor extends AbstractEvalOpProcessor {
                     // serialize here because in sessionless requests the serialization must occur in the same
                     // thread as the eval.  as eval occurs in the GremlinExecutor there's no way to get back to the
                     // thread that processed the eval of the script so, we have to push serialization down into that
-                    final Map<String, Object> metadata = generateResultMetaData(nettyContext, msg, code, itty, settings);
+                    beforeResponseGeneration(context, msg, itty, graph);
+                    final Map<String, Object> metadata = generateResultMetaData(context, msg, code, itty, settings);
                     final Map<String, Object> statusAttrb = generateStatusAttributes(nettyContext, msg, code, itty, settings);
                     Frame frame = null;
                     try {

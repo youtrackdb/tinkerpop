@@ -24,6 +24,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.util.MetricManager;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.util.MessageSerializer;
 import org.apache.tinkerpop.gremlin.util.Tokens;
 import org.apache.tinkerpop.gremlin.util.message.RequestMessage;
@@ -182,10 +183,11 @@ public abstract class AbstractOpProcessor implements OpProcessor {
                     // serialize here because in sessionless requests the serialization must occur in the same
                     // thread as the eval.  as eval occurs in the GremlinExecutor there's no way to get back to the
                     // thread that processed the eval of the script so, we have to push serialization down into that
+                    beforeResponseGeneration(context, msg, itty, null);
                     Frame frame = null;
                     try {
                         frame = makeFrame(context, msg, serializer, useBinary, aggregate, code,
-                                generateResultMetaData(nettyContext, msg, code, itty, settings),
+                                generateResultMetaData(context, msg, code, itty, settings),
                                 generateStatusAttributes(nettyContext, msg, code, itty, settings));
                     } catch (Exception ex) {
                         // a frame may use a Bytebuf which is a countable release - if it does not get written
@@ -259,6 +261,14 @@ public abstract class AbstractOpProcessor implements OpProcessor {
     }
 
     /**
+     * Called before sending response of evalution of the client.
+     * @param graph currently open graph, can be null if can not be identified by {@link OpProcessor}
+     */
+    protected void beforeResponseGeneration(Context context, RequestMessage requestMessage, Iterator itty, Graph graph) {
+        // do nothing by default
+    }
+
+    /**
      * Called when iteration within {@link #handleIterator(Context, Iterator)} is on its final pass and the final
      * frame is about to be sent back to the client. This method only gets called on successful iteration of the
      * entire result.
@@ -306,6 +316,22 @@ public abstract class AbstractOpProcessor implements OpProcessor {
         metaData.put(Tokens.ARGS_HOST, ctx.channel().remoteAddress().toString());
 
         return metaData;
+    }
+
+    /**
+     * Generates response result meta-data to put on a {@link ResponseMessage}.
+     * <p>
+     * Delegates to
+     * {@link #generateResultMetaData(ChannelHandlerContext, RequestMessage, ResponseStatusCode, Iterator, Settings)} by default.
+     *
+     * @param itty a reference to the current {@link Iterator} of results - it is not meant to be forwarded in
+     *             this method
+     *
+     */
+    protected Map<String, Object> generateResultMetaData(final Context ctx, final RequestMessage msg,
+        final ResponseStatusCode code, final Iterator itty,
+        final Settings settings) {
+        return generateResultMetaData(ctx.getChannelHandlerContext(), msg, code, itty, settings);
     }
 
     protected static Frame makeFrame(final Context ctx, final RequestMessage msg,

@@ -100,7 +100,7 @@ public class DriverRemoteConnection implements RemoteConnection {
     /**
      * This constructor is largely just for unit testing purposes and should not typically be used externally.
      */
-    DriverRemoteConnection(final Cluster cluster, final Configuration conf) {
+    public DriverRemoteConnection(final Cluster cluster, final Configuration conf) {
         remoteTraversalSourceName = conf.getString(GREMLIN_REMOTE_DRIVER_SOURCENAME, DEFAULT_TRAVERSAL_SOURCE);
 
         attachElements = conf.containsKey(GREMLIN_REMOTE + "attachment");
