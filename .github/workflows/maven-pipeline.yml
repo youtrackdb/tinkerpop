@@ -85,7 +85,7 @@ jobs:
 
       - name: Get Version and Create Annotation
         run: |
-          VERSION=$(mvn -s .github/workflows/settings.xml help:evaluate -Dexpression=project.version -q -DforceStdout -Dsha1=-${{ steps.vars.outputs.sha_short }})
+          VERSION=$(mvn -N -s .github/workflows/settings.xml help:evaluate -Dexpression=project.version -q -DforceStdout -Dsha1=-${{ steps.vars.outputs.sha_short }})
           echo "Published version: $VERSION"
           echo "::notice title=Published Maven Artifacts::Version: $VERSION"
   notify-failure:
