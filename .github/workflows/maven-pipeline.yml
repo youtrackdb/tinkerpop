@@ -55,6 +55,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref_name == 'ytdb-fork-3.8-dev' # Only deploy on push to ytdb-fork-3.8-dev branch
+    env:
+      MAVEN_DEPLOY_REPO: "central::default::https://oss.sonatype.org/content/repositories/snapshots"
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v6
@@ -73,7 +75,7 @@ jobs:
 
       - name: Maven deploy
         # Deploy to Maven Central as SNAPSHOT
-        run: mvn -s .github/workflows/settings.xml -Dsha1=-${{ steps.vars.outputs.sha_short }} clean deploy -am -pl ${{ env.MODULES}} -DskipTests -B
+        run: mvn -s .github/workflows/settings.xml -Dsha1=-${{ steps.vars.outputs.sha_short }} -DaltDeploymentRepository=${{ env.MAVEN_DEPLOY_REPO }} clean deploy -am -pl ${{ env.MODULES}} -DskipTests -B
         env:
           # Credentials mapped to environment variables
           MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
