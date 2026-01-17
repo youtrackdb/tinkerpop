@@ -728,15 +728,15 @@ __metadata:
   linkType: hard
 
 "gremlin@file:../../src/main/javascript/gremlin-javascript::locator=browser%40workspace%3A.":
-  version: 3.7.2-alpha1
-  resolution: "gremlin@file:../../src/main/javascript/gremlin-javascript#../../src/main/javascript/gremlin-javascript::hash=4bd845&locator=browser%40workspace%3A."
+  version: 3.8.1-YTDB-alpha1
+  resolution: "gremlin@file:../../src/main/javascript/gremlin-javascript#../../src/main/javascript/gremlin-javascript::hash=7fb12c&locator=browser%40workspace%3A."
   dependencies:
     buffer: "npm:^6.0.3"
     eventemitter3: "npm:^5.0.1"
     readable-stream: "npm:^4.5.2"
     uuid: "npm:^9.0.1"
     ws: "npm:^8.16.0"
-  checksum: 10c0/1a8172b44851cb71eb11f5aee438034912762351d941684fae942a142d9d757e3be72bd136a5cc43dd81dd00594a17c36009d46ef06e0ba4120f7644aefa675e
+  checksum: 10c0/a92322ba072fcd9f1f4347213b2328c0f66cd3411cdebba36ccb362744c6e3d111bf9f8261da3c6bfcfe5e7a227c3ca87563551c0c31283421a51b153c0f752a
   languageName: node
   linkType: hard
 
@@ -1351,8 +1351,8 @@ __metadata:
   linkType: hard
 
 "tar@npm:^6.1.11, tar@npm:^6.1.2":
-  version: 6.2.0
-  resolution: "tar@npm:6.2.0"
+  version: 6.2.1
+  resolution: "tar@npm:6.2.1"
   dependencies:
     chownr: "npm:^2.0.0"
     fs-minipass: "npm:^2.0.0"
@@ -1360,7 +1360,7 @@ __metadata:
     minizlib: "npm:^2.1.1"
     mkdirp: "npm:^1.0.3"
     yallist: "npm:^4.0.0"
-  checksum: 10c0/02ca064a1a6b4521fef88c07d389ac0936730091f8c02d30ea60d472e0378768e870769ab9e986d87807bfee5654359cf29ff4372746cc65e30cbddc352660d8
+  checksum: 10c0/a5eca3eb50bc11552d453488344e6507156b9193efd7635e98e867fab275d527af53d8866e2370cd09dfe74378a18111622ace35af6a608e5223a7d27fe99537
   languageName: node
   linkType: hard
 
