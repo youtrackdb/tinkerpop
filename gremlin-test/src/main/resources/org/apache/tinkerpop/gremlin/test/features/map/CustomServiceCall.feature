@@ -191,6 +191,53 @@ Feature: Custom Service Call Syntax - Direct Method Calls
       | v[5] |
       | v[6] |
 
+  Scenario: g_V_testService_args_withMapInMiddle
+    Given the modern graph
+    And registering service "testService"
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.V().testService("arg1", xx1, "arg2")
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | v[1] |
+      | v[2] |
+      | v[3] |
+      | v[4] |
+      | v[5] |
+      | v[6] |
+
+  Scenario: g_V_testService_args_withMapInMiddle_numeric
+    Given the modern graph
+    And registering service "testService"
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.V().testService(1, xx1, 2, 3)
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | v[1] |
+      | v[2] |
+      | v[3] |
+      | v[4] |
+      | v[5] |
+      | v[6] |
+
+  Scenario: g_testService_args_withMapInMiddle_fromSource
+    Given the empty graph
+    And registering service "testService"
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.testService("arg1", xx1, "arg2")
+      """
+    When iterated to list
+    Then the result should be empty
+
   Scenario: g_testService_args_fromSource
     Given the empty graph
     And registering service "testService"

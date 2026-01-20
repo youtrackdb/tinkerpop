@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -291,8 +292,7 @@ public class TraversalSourceSpawnMethodVisitor extends DefaultGremlinBaseVisitor
         final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
         final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
         
-        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
-        params.put("args", java.util.Arrays.asList(args));
+        final List<Object> argsList = new java.util.ArrayList<>(java.util.Arrays.asList(args));
         
         Map map;
         if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
@@ -301,7 +301,10 @@ public class TraversalSourceSpawnMethodVisitor extends DefaultGremlinBaseVisitor
             map = (Map) literalOrVar;
         }
         
-        params.putAll(map);
+        argsList.add(map);
+        
+        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", argsList);
         return this.traversalSource.call(serviceName, params);
     }
 
@@ -326,8 +329,7 @@ public class TraversalSourceSpawnMethodVisitor extends DefaultGremlinBaseVisitor
         final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
         final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
         
-        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
-        params.put("args", java.util.Arrays.asList(args));
+        final List<Object> argsList = new java.util.ArrayList<>(java.util.Arrays.asList(args));
         
         Map map;
         if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
@@ -336,7 +338,10 @@ public class TraversalSourceSpawnMethodVisitor extends DefaultGremlinBaseVisitor
             map = (Map) literalOrVar;
         }
         
-        params.putAll(map);
+        argsList.add(map);
+        
+        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", argsList);
         return this.traversalSource.call(serviceName, params, anonymousVisitor.visitNestedTraversal(ctx.nestedTraversal()));
     }
 }

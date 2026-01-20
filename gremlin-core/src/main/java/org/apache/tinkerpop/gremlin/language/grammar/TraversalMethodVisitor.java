@@ -1981,8 +1981,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
         final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
         
-        final Map<String, Object> params = new java.util.LinkedHashMap<>();
-        params.put("args", java.util.Arrays.asList(args));
+        final List<Object> argsList = new java.util.ArrayList<>(java.util.Arrays.asList(args));
         
         Map map;
         if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
@@ -1991,7 +1990,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             map = (Map) literalOrVar;
         }
         
-        params.putAll(map);
+        argsList.add(map);
+        
+        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", argsList);
         return graphTraversal.call(serviceName, params);
     }
 
@@ -2016,8 +2018,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
         final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
         
-        final Map<String, Object> params = new java.util.LinkedHashMap<>();
-        params.put("args", java.util.Arrays.asList(args));
+        final List<Object> argsList = new java.util.ArrayList<>(java.util.Arrays.asList(args));
         
         Map map;
         if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
@@ -2026,7 +2027,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             map = (Map) literalOrVar;
         }
         
-        params.putAll(map);
+        argsList.add(map);
+        
+        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", argsList);
         return graphTraversal.call(serviceName, params, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
     }
 
