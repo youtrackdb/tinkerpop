@@ -215,6 +215,8 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Property;
+import org.apache.tinkerpop.gremlin.structure.service.ServiceRegistry;
+import static org.apache.tinkerpop.gremlin.structure.service.Service.DirectoryService;
 import org.apache.tinkerpop.gremlin.structure.PropertyType;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -1760,6 +1762,25 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
     }
 
     /**
+     * Validates that the specified service is registered in the ServiceRegistry.
+     * Throws IllegalArgumentException if the service is not found.
+     *
+     * @param service the name of the service to validate
+     * @throws IllegalArgumentException if the service is not registered
+     */
+    default void validateServiceExists(final String service) {
+        if (service == null || service.equals(DirectoryService.NAME)) {
+            return; // null service and --list are allowed (for directory listing)
+        }
+        this.asAdmin().getGraph().ifPresent(graph -> {
+            final ServiceRegistry registry = graph.getServiceRegistry();
+            if (registry != null && registry != ServiceRegistry.EMPTY) {
+                registry.checkRegisteredService(service);
+            }
+        });
+    }
+
+    /**
      * Perform the specified service call with no parameters.
      *
      * @param service the name of the service call
@@ -1768,6 +1789,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service) {
+        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service);
         final CallStep<S,E> call = new CallStep<>(this.asAdmin(), false, service);
         return this.asAdmin().addStep(call);
@@ -1783,6 +1805,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final Map params) {
+        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service, params);
         final CallStep<S,E> call = new CallStep<>(this.asAdmin(), false, service, params);
         return this.asAdmin().addStep(call);
@@ -1798,6 +1821,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.8.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final GValue<Map<?,?>> params) {
+        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.call, service, params);
         return this.asAdmin().addStep(new CallStepPlaceholder<>(this.asAdmin(), false, service, params));
     }
@@ -1812,6 +1836,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final Traversal<?, Map<?,?>> childTraversal) {
+        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service, childTraversal);
         final CallStep<S,E> step = null == childTraversal ? new CallStep(this.asAdmin(), false, service) :
                 new CallStep(this.asAdmin(), false, service, new LinkedHashMap(), childTraversal.asAdmin());
@@ -1831,6 +1856,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final Map params, final Traversal<?, Map<?,?>> childTraversal) {
+        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service, params, childTraversal);
         final CallStep<S,E> step = null == childTraversal ? new CallStep(this.asAdmin(), false, service, params) :
                 new CallStep(this.asAdmin(), false, service, params, childTraversal.asAdmin());
@@ -1850,6 +1876,7 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.8.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final GValue<Map<?,?>> params, final Traversal<S, Map<?,?>> childTraversal) {
+        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.call, service, params, childTraversal);
         final CallStepPlaceholder<S,E> step = null == childTraversal ? new CallStepPlaceholder<>(this.asAdmin(), false, service, params) :
                 new CallStepPlaceholder<>(this.asAdmin(), false, service, params, childTraversal.asAdmin());

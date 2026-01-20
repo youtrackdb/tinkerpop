@@ -38,9 +38,20 @@ import org.apache.tinkerpop.gremlin.language.translator.Translator;
 import org.apache.tinkerpop.gremlin.process.traversal.Merge;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.service.Service;
+import org.apache.tinkerpop.gremlin.structure.service.ServiceRegistry;
+import org.apache.tinkerpop.gremlin.util.function.TriFunction;
+import org.apache.tinkerpop.gremlin.util.iterator.EmptyIterator;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
+
+import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.function.BiFunction;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.ImmutablePath;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Tree;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -238,9 +249,36 @@ public final class StepDefinition {
         add(Pair.with(Pattern.compile("dt\\[(.*)\\]"), DatetimeHelper::parse));
         add(Pair.with(Pattern.compile("uuid\\[(.*)\\]"), UUID::fromString));
 
-        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.id"), s -> g.V().has("name", s).id().next()));
-        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.sid"), s -> g.V().has("name", s).id().next().toString()));
-        add(Pair.with(Pattern.compile("v\\[(.+)\\]"), s -> detachVertex(g.V().has("name", s).next())));
+        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.id"), s -> {
+            try {
+                // Try to parse as numeric ID first
+                final Object id = Long.parseLong(s);
+                return g.V(id).id().next();
+            } catch (NumberFormatException e) {
+                // Fall back to name lookup
+                return g.V().has("name", s).id().next();
+            }
+        }));
+        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.sid"), s -> {
+            try {
+                // Try to parse as numeric ID first
+                final Object id = Long.parseLong(s);
+                return g.V(id).id().next().toString();
+            } catch (NumberFormatException e) {
+                // Fall back to name lookup
+                return g.V().has("name", s).id().next().toString();
+            }
+        }));
+        add(Pair.with(Pattern.compile("v\\[(.+)\\]"), s -> {
+            try {
+                // Try to parse as numeric ID first
+                final Object id = Long.parseLong(s);
+                return detachVertex(g.V(id).next());
+            } catch (NumberFormatException e) {
+                // Fall back to name lookup
+                return detachVertex(g.V().has("name", s).next());
+            }
+        }));
         add(Pair.with(Pattern.compile("e\\[(.+)\\]\\.id"), s -> getEdgeId(g, s)));
         add(Pair.with(Pattern.compile("e\\[(.+)\\]\\.sid"), s -> getEdgeIdString(g, s)));
         add(Pair.with(Pattern.compile("e\\[(.+)\\]"), s -> getEdge(g, s)));
@@ -337,6 +375,47 @@ public final class StepDefinition {
     @Given("using the side effect {word} defined as {string}")
     public void usingTheSideEffectXDefinedAsX(final String key, final String value) {
         sideEffects.put(key, convertToString(value));
+    }
+
+    @Given("registering service {string}")
+    public void registeringService(final String serviceName) {
+        if (g == null) {
+            throw new IllegalStateException("Graph must be initialized before registering services. Use 'Given the {word} graph' first.");
+        }
+        
+        final Graph graph = g.getGraph();
+        if (graph == null) {
+            throw new IllegalStateException("GraphTraversalSource does not have an associated Graph");
+        }
+        
+        final ServiceRegistry registry = graph.getServiceRegistry();
+        if (registry == null || registry == ServiceRegistry.EMPTY) {
+            throw new IllegalStateException("Graph does not support ServiceRegistry");
+        }
+        
+        // Use reflection to call registerLambdaService if available (for TinkerServiceRegistry)
+        try {
+            final Method registerLambdaService = registry.getClass().getMethod("registerLambdaService", String.class);
+            final Object serviceFactory = registerLambdaService.invoke(registry, serviceName);
+            
+            // Register simple start and streaming lambdas for testing
+            // For start: return empty iterator (or could return a test value)
+            final BiFunction<Service.ServiceCallContext, Map, Iterator<Object>> startLambda = 
+                (ctx, params) -> EmptyIterator.instance();
+            // For streaming: pass through the traverser value (the vertex/edge/element)
+            // This acts as a simple pass-through service that doesn't modify the input
+            final TriFunction<Service.ServiceCallContext, Traverser.Admin<Object>, Map, Iterator<Object>> streamingLambda = 
+                (ctx, traverser, params) -> IteratorUtils.of(traverser.get());
+            
+            // Use reflection to call addStartLambda and addStreamingLambda
+            final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);
+            final Method addStreamingLambda = serviceFactory.getClass().getMethod("addStreamingLambda", TriFunction.class);
+            
+            addStartLambda.invoke(serviceFactory, startLambda);
+            addStreamingLambda.invoke(serviceFactory, streamingLambda);
+        } catch (Exception e) {
+            throw new UnsupportedOperationException("Service registration failed. This step requires a ServiceRegistry that supports registerLambdaService (e.g., TinkerServiceRegistry).", e);
+        }
     }
 
     @Given("the traversal of")

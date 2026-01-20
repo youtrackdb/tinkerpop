@@ -46,6 +46,8 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.service.ServiceRegistry;
+import static org.apache.tinkerpop.gremlin.structure.service.Service.DirectoryService;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
@@ -559,6 +561,25 @@ public class GraphTraversalSource implements TraversalSource {
     }
 
     /**
+     * Validates that the specified service is registered in the ServiceRegistry.
+     * Throws IllegalArgumentException if the service is not found.
+     *
+     * @param service the name of the service to validate
+     * @throws IllegalArgumentException if the service is not registered
+     */
+    private void validateServiceExists(final String service) {
+        if (service == null || service.equals(DirectoryService.NAME)) {
+            return; // null service and --list are allowed (for directory listing)
+        }
+        if (this.graph != null) {
+            final ServiceRegistry registry = this.graph.getServiceRegistry();
+            if (registry != null && registry != ServiceRegistry.EMPTY) {
+                registry.checkRegisteredService(service);
+            }
+        }
+    }
+
+    /**
      * Spawns a {@link GraphTraversal} starting with a list of available services.
      *
      * @since 3.6.0
@@ -577,6 +598,7 @@ public class GraphTraversalSource implements TraversalSource {
      * @since 3.6.0
      */
     public <S> GraphTraversal<S, S> call(final String service) {
+        validateServiceExists(service);
         final GraphTraversalSource clone = this.clone();
         clone.bytecode.addStep(GraphTraversal.Symbols.call, service);
         final GraphTraversal.Admin<S, S> traversal = new DefaultGraphTraversal<>(clone);
@@ -592,6 +614,7 @@ public class GraphTraversalSource implements TraversalSource {
      * @since 3.6.0
      */
     public <S> GraphTraversal<S, S> call(final String service, final Map params) {
+        validateServiceExists(service);
         final GraphTraversalSource clone = this.clone();
         clone.bytecode.addStep(GraphTraversal.Symbols.call, service, params);
         final GraphTraversal.Admin<S, S> traversal = new DefaultGraphTraversal<>(clone);
@@ -607,6 +630,7 @@ public class GraphTraversalSource implements TraversalSource {
      * @since 3.6.0
      */
     public <S> GraphTraversal<S, S> call(final String service, final Traversal<S, Map> childTraversal) {
+        validateServiceExists(service);
         final GraphTraversalSource clone = this.clone();
         clone.bytecode.addStep(GraphTraversal.Symbols.call, service, childTraversal);
         final GraphTraversal.Admin<S, S> traversal = new DefaultGraphTraversal<>(clone);
@@ -627,6 +651,7 @@ public class GraphTraversalSource implements TraversalSource {
      * @since 3.6.0
      */
     public <S> GraphTraversal<S, S> call(final String service, final Map params, final Traversal<S, Map> childTraversal) {
+        validateServiceExists(service);
         final GraphTraversalSource clone = this.clone();
         clone.bytecode.addStep(GraphTraversal.Symbols.call, service, params, childTraversal);
         final GraphTraversal.Admin<S, S> traversal = new DefaultGraphTraversal<>(clone);
@@ -644,6 +669,7 @@ public class GraphTraversalSource implements TraversalSource {
      * @since 3.8.0
      */
     public <S> GraphTraversal<S, S> call(final String service, final GValue<Map<?,?>> params) {
+        validateServiceExists(service);
         final GraphTraversalSource clone = GraphTraversalSource.this.clone();
         clone.bytecode.addStep(GraphTraversal.Symbols.call, service, params);
         final GraphTraversal.Admin<S, S> traversal = new DefaultGraphTraversal<>(clone);
@@ -659,6 +685,7 @@ public class GraphTraversalSource implements TraversalSource {
      * @since 3.8.0
      */
     public <S> GraphTraversal<S, S> call(final String service, final GValue<Map<?,?>> params, final Traversal<S, Map<?,?>> childTraversal) {
+        validateServiceExists(service);
         final GraphTraversalSource clone = GraphTraversalSource.this.clone();
         clone.bytecode.addStep(GraphTraversal.Symbols.call, service, params, childTraversal);
         final GraphTraversal.Admin<S, S> traversal = new DefaultGraphTraversal<>(clone);

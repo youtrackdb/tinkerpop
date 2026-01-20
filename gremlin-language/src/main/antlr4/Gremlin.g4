@@ -108,6 +108,7 @@ traversalSourceSpawnMethod
     | traversalSourceSpawnMethod_io
     | traversalSourceSpawnMethod_call
     | traversalSourceSpawnMethod_union
+    | traversalSourceSpawnMethod_customService
     ;
 
 traversalSourceSpawnMethod_addE
@@ -157,6 +158,13 @@ traversalSourceSpawnMethod_call
 
 traversalSourceSpawnMethod_union
     : K_UNION LPAREN nestedTraversalList RPAREN
+    ;
+
+traversalSourceSpawnMethod_customService
+    : Identifier LPAREN RPAREN #traversalSourceSpawnMethod_customService_empty
+    | Identifier LPAREN genericMapArgument RPAREN #traversalSourceSpawnMethod_customService_map
+    | Identifier LPAREN nestedTraversal RPAREN #traversalSourceSpawnMethod_customService_traversal
+    | Identifier LPAREN genericMapArgument COMMA nestedTraversal RPAREN #traversalSourceSpawnMethod_customService_map_traversal
     ;
 
 chainedTraversal
@@ -309,6 +317,7 @@ traversalMethod
     | traversalMethod_dateAdd
     | traversalMethod_dateDiff
     | traversalMethod_asNumber
+    | traversalMethod_customService
     ;
 
 traversalMethod_V
@@ -408,6 +417,13 @@ traversalMethod_call
     | K_CALL LPAREN stringLiteral COMMA genericMapArgument RPAREN #traversalMethod_call_string_map
     | K_CALL LPAREN stringLiteral COMMA nestedTraversal RPAREN #traversalMethod_call_string_traversal
     | K_CALL LPAREN stringLiteral COMMA genericMapArgument COMMA nestedTraversal RPAREN #traversalMethod_call_string_map_traversal
+    ;
+
+traversalMethod_customService
+    : Identifier LPAREN RPAREN #traversalMethod_customService_empty
+    | Identifier LPAREN genericMapArgument RPAREN #traversalMethod_customService_map
+    | Identifier LPAREN nestedTraversal RPAREN #traversalMethod_customService_traversal
+    | Identifier LPAREN genericMapArgument COMMA nestedTraversal RPAREN #traversalMethod_customService_map_traversal
     ;
 
 traversalMethod_cap
