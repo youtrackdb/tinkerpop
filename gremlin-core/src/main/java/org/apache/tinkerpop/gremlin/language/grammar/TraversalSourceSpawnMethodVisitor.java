@@ -287,61 +287,11 @@ public class TraversalSourceSpawnMethodVisitor extends DefaultGremlinBaseVisitor
      * {@inheritDoc}
      */
     @Override
-    public GraphTraversal visitTraversalSourceSpawnMethod_customService_args_map(final GremlinParser.TraversalSourceSpawnMethod_customService_args_mapContext ctx) {
-        final String serviceName = ctx.Identifier().getText();
-        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
-        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
-        
-        final List<Object> argsList = new java.util.ArrayList<>(java.util.Arrays.asList(args));
-        
-        Map map;
-        if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
-            map = ((GValue<Map>) literalOrVar).get();
-        } else {
-            map = (Map) literalOrVar;
-        }
-        
-        argsList.add(map);
-        
-        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
-        params.put("args", argsList);
-        return this.traversalSource.call(serviceName, params);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public GraphTraversal visitTraversalSourceSpawnMethod_customService_args_traversal(final GremlinParser.TraversalSourceSpawnMethod_customService_args_traversalContext ctx) {
         final String serviceName = ctx.Identifier().getText();
         final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
         final Map<Object, Object> params = new java.util.LinkedHashMap<>();
         params.put("args", java.util.Arrays.asList(args));
-        return this.traversalSource.call(serviceName, params, anonymousVisitor.visitNestedTraversal(ctx.nestedTraversal()));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public GraphTraversal visitTraversalSourceSpawnMethod_customService_args_map_traversal(final GremlinParser.TraversalSourceSpawnMethod_customService_args_map_traversalContext ctx) {
-        final String serviceName = ctx.Identifier().getText();
-        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
-        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
-        
-        final List<Object> argsList = new java.util.ArrayList<>(java.util.Arrays.asList(args));
-        
-        Map map;
-        if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
-            map = ((GValue<Map>) literalOrVar).get();
-        } else {
-            map = (Map) literalOrVar;
-        }
-        
-        argsList.add(map);
-        
-        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
-        params.put("args", argsList);
         return this.traversalSource.call(serviceName, params, anonymousVisitor.visitNestedTraversal(ctx.nestedTraversal()));
     }
 }
