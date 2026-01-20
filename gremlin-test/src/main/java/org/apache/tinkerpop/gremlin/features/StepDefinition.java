@@ -251,31 +251,25 @@ public final class StepDefinition {
 
         add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.id"), s -> {
             try {
-                // Try to parse as numeric ID first
                 final Object id = Long.parseLong(s);
                 return g.V(id).id().next();
             } catch (NumberFormatException e) {
-                // Fall back to name lookup
                 return g.V().has("name", s).id().next();
             }
         }));
         add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.sid"), s -> {
             try {
-                // Try to parse as numeric ID first
                 final Object id = Long.parseLong(s);
                 return g.V(id).id().next().toString();
             } catch (NumberFormatException e) {
-                // Fall back to name lookup
                 return g.V().has("name", s).id().next().toString();
             }
         }));
         add(Pair.with(Pattern.compile("v\\[(.+)\\]"), s -> {
             try {
-                // Try to parse as numeric ID first
                 final Object id = Long.parseLong(s);
                 return detachVertex(g.V(id).next());
             } catch (NumberFormatException e) {
-                // Fall back to name lookup
                 return detachVertex(g.V().has("name", s).next());
             }
         }));
@@ -398,16 +392,11 @@ public final class StepDefinition {
             final Method registerLambdaService = registry.getClass().getMethod("registerLambdaService", String.class);
             final Object serviceFactory = registerLambdaService.invoke(registry, serviceName);
             
-            // Register simple start and streaming lambdas for testing
-            // For start: return empty iterator (or could return a test value)
             final BiFunction<Service.ServiceCallContext, Map, Iterator<Object>> startLambda = 
                 (ctx, params) -> EmptyIterator.instance();
-            // For streaming: pass through the traverser value (the vertex/edge/element)
-            // This acts as a simple pass-through service that doesn't modify the input
             final TriFunction<Service.ServiceCallContext, Traverser.Admin<Object>, Map, Iterator<Object>> streamingLambda = 
                 (ctx, traverser, params) -> IteratorUtils.of(traverser.get());
             
-            // Use reflection to call addStartLambda and addStreamingLambda
             final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);
             final Method addStreamingLambda = serviceFactory.getClass().getMethod("addStreamingLambda", TriFunction.class);
             
