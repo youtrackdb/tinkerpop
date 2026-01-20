@@ -1766,11 +1766,12 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * Throws IllegalArgumentException if the service is not found.
      *
      * @param service the name of the service to validate
+     * @return the current GraphTraversal
      * @throws IllegalArgumentException if the service is not registered
      */
-    default void validateServiceExists(final String service) {
+    default GraphTraversal<S, E> validateServiceExists(final String service) {
         if (service == null || service.equals(DirectoryService.NAME)) {
-            return; // null service and --list are allowed (for directory listing)
+            return this;
         }
         this.asAdmin().getGraph().ifPresent(graph -> {
             final ServiceRegistry registry = graph.getServiceRegistry();
@@ -1778,8 +1779,8 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
                 registry.checkRegisteredService(service);
             }
         });
+        return this;
     }
-
     /**
      * Perform the specified service call with no parameters.
      *

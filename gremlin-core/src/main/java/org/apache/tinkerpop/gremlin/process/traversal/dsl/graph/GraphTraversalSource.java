@@ -565,11 +565,12 @@ public class GraphTraversalSource implements TraversalSource {
      * Throws IllegalArgumentException if the service is not found.
      *
      * @param service the name of the service to validate
+     * @return the current GraphTraversalSource
      * @throws IllegalArgumentException if the service is not registered
      */
-    private void validateServiceExists(final String service) {
+    private GraphTraversalSource validateServiceExists(final String service) {
         if (service == null || service.equals(DirectoryService.NAME)) {
-            return; // null service and --list are allowed (for directory listing)
+            return this; // null service and --list are allowed
         }
         if (this.graph != null) {
             final ServiceRegistry registry = this.graph.getServiceRegistry();
@@ -577,6 +578,7 @@ public class GraphTraversalSource implements TraversalSource {
                 registry.checkRegisteredService(service);
             }
         }
+        return this; // Zwracamy 'this' zamiast niczego
     }
 
     /**
