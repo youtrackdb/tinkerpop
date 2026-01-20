@@ -1789,7 +1789,6 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service) {
-        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service);
         final CallStep<S,E> call = new CallStep<>(this.asAdmin(), false, service);
         return this.asAdmin().addStep(call);
@@ -1805,7 +1804,6 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final Map params) {
-        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service, params);
         final CallStep<S,E> call = new CallStep<>(this.asAdmin(), false, service, params);
         return this.asAdmin().addStep(call);
@@ -1821,7 +1819,6 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.8.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final GValue<Map<?,?>> params) {
-        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.call, service, params);
         return this.asAdmin().addStep(new CallStepPlaceholder<>(this.asAdmin(), false, service, params));
     }
@@ -1836,7 +1833,6 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final Traversal<?, Map<?,?>> childTraversal) {
-        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service, childTraversal);
         final CallStep<S,E> step = null == childTraversal ? new CallStep(this.asAdmin(), false, service) :
                 new CallStep(this.asAdmin(), false, service, new LinkedHashMap(), childTraversal.asAdmin());
@@ -1856,7 +1852,6 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.6.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final Map params, final Traversal<?, Map<?,?>> childTraversal) {
-        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(Symbols.call, service, params, childTraversal);
         final CallStep<S,E> step = null == childTraversal ? new CallStep(this.asAdmin(), false, service, params) :
                 new CallStep(this.asAdmin(), false, service, params, childTraversal.asAdmin());
@@ -1876,7 +1871,6 @@ public interface GraphTraversal<S, E> extends Traversal<S, E> {
      * @since 3.8.0
      */
     default <E> GraphTraversal<S, E> call(final String service, final GValue<Map<?,?>> params, final Traversal<S, Map<?,?>> childTraversal) {
-        validateServiceExists(service);
         this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.call, service, params, childTraversal);
         final CallStepPlaceholder<S,E> step = null == childTraversal ? new CallStepPlaceholder<>(this.asAdmin(), false, service, params) :
                 new CallStepPlaceholder<>(this.asAdmin(), false, service, params, childTraversal.asAdmin());

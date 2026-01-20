@@ -102,6 +102,137 @@ Feature: Custom Service Call Syntax - Direct Method Calls
       | v[5] |
       | v[6] |
 
+  # Tests with argument lists (args)
+
+  Scenario: g_V_testService_args
+    Given the modern graph
+    And registering service "testService"
+    And the traversal of
+      """
+      g.V().testService("arg1", "arg2")
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | v[1] |
+      | v[2] |
+      | v[3] |
+      | v[4] |
+      | v[5] |
+      | v[6] |
+
+  Scenario: g_V_testService_args_numeric
+    Given the modern graph
+    And registering service "testService"
+    And the traversal of
+      """
+      g.V().testService(1, 2, 3)
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | v[1] |
+      | v[2] |
+      | v[3] |
+      | v[4] |
+      | v[5] |
+      | v[6] |
+
+  Scenario: g_V_testService_args_mapX
+    Given the modern graph
+    And registering service "testService"
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.V().testService("arg1", "arg2", xx1)
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | v[1] |
+      | v[2] |
+      | v[3] |
+      | v[4] |
+      | v[5] |
+      | v[6] |
+
+  Scenario: g_V_testService_args_traversalX
+    Given the modern graph
+    And registering service "testService"
+    And the traversal of
+      """
+      g.V().testService("arg1", "arg2", __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | v[1] |
+      | v[2] |
+      | v[3] |
+      | v[4] |
+      | v[5] |
+      | v[6] |
+
+  Scenario: g_V_testService_args_map_traversalX
+    Given the modern graph
+    And registering service "testService"
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.V().testService("arg1", "arg2", xx1, __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | v[1] |
+      | v[2] |
+      | v[3] |
+      | v[4] |
+      | v[5] |
+      | v[6] |
+
+  Scenario: g_testService_args_fromSource
+    Given the empty graph
+    And registering service "testService"
+    And the traversal of
+      """
+      g.testService("arg1", "arg2")
+      """
+    When iterated to list
+    Then the result should be empty
+
+  Scenario: g_testService_args_mapX_fromSource
+    Given the empty graph
+    And registering service "testService"
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.testService("arg1", "arg2", xx1)
+      """
+    When iterated to list
+    Then the result should be empty
+
+  Scenario: g_testService_args_traversalX_fromSource
+    Given the empty graph
+    And registering service "testService"
+    And the traversal of
+      """
+      g.testService("arg1", "arg2", __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the result should be empty
+
+  Scenario: g_testService_args_map_traversalX_fromSource
+    Given the empty graph
+    And registering service "testService"
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.testService("arg1", "arg2", xx1, __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the result should be empty
+
   # Validation tests - non-existent services should throw exceptions
 
   Scenario: g_callXnonExistentServiceX_shouldThrowException
@@ -175,6 +306,82 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     And the traversal of
       """
       g.nonExistentService(xx1, __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_V_callXnonExistentService_argsX_shouldThrowException
+    Given the modern graph
+    And the traversal of
+      """
+      g.V().nonExistentService("arg1", "arg2")
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_V_callXnonExistentService_args_mapX_shouldThrowException
+    Given the modern graph
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.V().nonExistentService("arg1", "arg2", xx1)
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_V_callXnonExistentService_args_traversalX_shouldThrowException
+    Given the modern graph
+    And the traversal of
+      """
+      g.V().nonExistentService("arg1", "arg2", __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_V_callXnonExistentService_args_map_traversalX_shouldThrowException
+    Given the modern graph
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.V().nonExistentService("arg1", "arg2", xx1, __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_callXnonExistentService_argsX_fromSource_shouldThrowException
+    Given the empty graph
+    And the traversal of
+      """
+      g.nonExistentService("arg1", "arg2")
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_callXnonExistentService_args_mapX_fromSource_shouldThrowException
+    Given the empty graph
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.nonExistentService("arg1", "arg2", xx1)
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_callXnonExistentService_args_traversalX_fromSource_shouldThrowException
+    Given the empty graph
+    And the traversal of
+      """
+      g.nonExistentService("arg1", "arg2", __.project("x").by(__.constant("y")))
+      """
+    When iterated to list
+    Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"
+
+  Scenario: g_callXnonExistentService_args_map_traversalX_fromSource_shouldThrowException
+    Given the empty graph
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.nonExistentService("arg1", "arg2", xx1, __.project("x").by(__.constant("y")))
       """
     When iterated to list
     Then the traversal will raise an error with message containing text of "Unrecognized service: nonExistentService"

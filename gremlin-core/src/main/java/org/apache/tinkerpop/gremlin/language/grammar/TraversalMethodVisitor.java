@@ -34,6 +34,7 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty.Cardinality;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import java.util.function.BiFunction;
@@ -1956,6 +1957,77 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.call(serviceName, (GValue<Map>) literalOrVar, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
         else
             return graphTraversal.call(serviceName, (Map) literalOrVar, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_args(final GremlinParser.TraversalMethod_customService_argsContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
+        final List<Object> argsList = java.util.Arrays.asList(args);
+        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", argsList);
+        return graphTraversal.call(serviceName, params);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_args_map(final GremlinParser.TraversalMethod_customService_args_mapContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
+        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
+        
+        final Map<String, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", java.util.Arrays.asList(args));
+        
+        Map map;
+        if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
+            map = ((GValue<Map>) literalOrVar).get();
+        } else {
+            map = (Map) literalOrVar;
+        }
+        
+        params.putAll(map);
+        return graphTraversal.call(serviceName, params);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_args_traversal(final GremlinParser.TraversalMethod_customService_args_traversalContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
+        final Map<String, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", java.util.Arrays.asList(args));
+        return graphTraversal.call(serviceName, params, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_args_map_traversal(final GremlinParser.TraversalMethod_customService_args_map_traversalContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
+        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
+        
+        final Map<String, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", java.util.Arrays.asList(args));
+        
+        Map map;
+        if (GValue.valueInstanceOf(literalOrVar, Map.class)) {
+            map = ((GValue<Map>) literalOrVar).get();
+        } else {
+            map = (Map) literalOrVar;
+        }
+        
+        params.putAll(map);
+        return graphTraversal.call(serviceName, params, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
     }
 
     /**

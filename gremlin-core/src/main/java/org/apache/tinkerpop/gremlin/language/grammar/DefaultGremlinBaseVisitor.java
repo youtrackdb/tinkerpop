@@ -162,6 +162,26 @@ public class DefaultGremlinBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
+	public T visitTraversalSourceSpawnMethod_customService_args(final GremlinParser.TraversalSourceSpawnMethod_customService_argsContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public T visitTraversalSourceSpawnMethod_customService_args_map(final GremlinParser.TraversalSourceSpawnMethod_customService_args_mapContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public T visitTraversalSourceSpawnMethod_customService_args_traversal(final GremlinParser.TraversalSourceSpawnMethod_customService_args_traversalContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public T visitTraversalSourceSpawnMethod_customService_args_map_traversal(final GremlinParser.TraversalSourceSpawnMethod_customService_args_map_traversalContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override public T visitChainedTraversal(final GremlinParser.ChainedTraversalContext ctx) { notImplemented(ctx); return null; }
 	/**
 	 * {@inheritDoc}
@@ -967,6 +987,22 @@ public class DefaultGremlinBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
 	 * {@inheritDoc}
 	 */
 	@Override public T visitTraversalMethod_customService_map_traversal(final GremlinParser.TraversalMethod_customService_map_traversalContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override public T visitTraversalMethod_customService_args(final GremlinParser.TraversalMethod_customService_argsContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override public T visitTraversalMethod_customService_args_map(final GremlinParser.TraversalMethod_customService_args_mapContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override public T visitTraversalMethod_customService_args_traversal(final GremlinParser.TraversalMethod_customService_args_traversalContext ctx) { notImplemented(ctx); return null; }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override public T visitTraversalMethod_customService_args_map_traversal(final GremlinParser.TraversalMethod_customService_args_map_traversalContext ctx) { notImplemented(ctx); return null; }
 	/**
 	 * {@inheritDoc}
 	 */
