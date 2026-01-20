@@ -240,35 +240,9 @@ public class TraversalSourceSpawnMethodVisitor extends DefaultGremlinBaseVisitor
      * {@inheritDoc}
      */
     @Override
-    public GraphTraversal visitTraversalSourceSpawnMethod_customService_map(final GremlinParser.TraversalSourceSpawnMethod_customService_mapContext ctx) {
-        final String serviceName = ctx.Identifier().getText();
-        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
-        if (GValue.valueInstanceOf(literalOrVar, Map.class))
-            return this.traversalSource.call(serviceName, (GValue<Map<?,?>>) literalOrVar);
-        else
-            return this.traversalSource.call(serviceName, (Map) literalOrVar);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public GraphTraversal visitTraversalSourceSpawnMethod_customService_traversal(final GremlinParser.TraversalSourceSpawnMethod_customService_traversalContext ctx) {
         final String serviceName = ctx.Identifier().getText();
         return this.traversalSource.call(serviceName, anonymousVisitor.visitNestedTraversal(ctx.nestedTraversal()));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public GraphTraversal visitTraversalSourceSpawnMethod_customService_map_traversal(final GremlinParser.TraversalSourceSpawnMethod_customService_map_traversalContext ctx) {
-        final String serviceName = ctx.Identifier().getText();
-        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
-        if (GValue.valueInstanceOf(literalOrVar, Map.class))
-            return this.traversalSource.call(serviceName, (GValue<Map<?,?>>) literalOrVar, anonymousVisitor.visitNestedTraversal(ctx.nestedTraversal()));
-        else
-            return this.traversalSource.call(serviceName, (Map) literalOrVar, anonymousVisitor.visitNestedTraversal(ctx.nestedTraversal()));
     }
 
     /**

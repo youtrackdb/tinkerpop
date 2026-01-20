@@ -162,9 +162,7 @@ traversalSourceSpawnMethod_union
 
 traversalSourceSpawnMethod_customService
     : Identifier LPAREN RPAREN #traversalSourceSpawnMethod_customService_empty
-    | Identifier LPAREN genericMapArgument RPAREN #traversalSourceSpawnMethod_customService_map
     | Identifier LPAREN nestedTraversal RPAREN #traversalSourceSpawnMethod_customService_traversal
-    | Identifier LPAREN genericMapArgument COMMA nestedTraversal RPAREN #traversalSourceSpawnMethod_customService_map_traversal
     | Identifier LPAREN genericArgumentVarargs RPAREN #traversalSourceSpawnMethod_customService_args
     | Identifier LPAREN genericArgumentVarargs COMMA nestedTraversal RPAREN #traversalSourceSpawnMethod_customService_args_traversal
     ;
@@ -423,9 +421,7 @@ traversalMethod_call
 
 traversalMethod_customService
     : Identifier LPAREN RPAREN #traversalMethod_customService_empty
-    | Identifier LPAREN genericMapArgument RPAREN #traversalMethod_customService_map
     | Identifier LPAREN nestedTraversal RPAREN #traversalMethod_customService_traversal
-    | Identifier LPAREN genericMapArgument COMMA nestedTraversal RPAREN #traversalMethod_customService_map_traversal
     | Identifier LPAREN genericArgumentVarargs RPAREN #traversalMethod_customService_args
     | Identifier LPAREN genericArgumentVarargs COMMA nestedTraversal RPAREN #traversalMethod_customService_args_traversal
     ;

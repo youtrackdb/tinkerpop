@@ -1928,35 +1928,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
      * {@inheritDoc}
      */
     @Override
-    public Traversal visitTraversalMethod_customService_map(final GremlinParser.TraversalMethod_customService_mapContext ctx) {
-        final String serviceName = ctx.Identifier().getText();
-        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
-        if (GValue.valueInstanceOf(literalOrVar, Map.class))
-            return graphTraversal.call(serviceName, (GValue<Map>) literalOrVar);
-        else
-            return graphTraversal.call(serviceName, (Map) literalOrVar);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Traversal visitTraversalMethod_customService_traversal(final GremlinParser.TraversalMethod_customService_traversalContext ctx) {
         final String serviceName = ctx.Identifier().getText();
         return graphTraversal.call(serviceName, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Traversal visitTraversalMethod_customService_map_traversal(final GremlinParser.TraversalMethod_customService_map_traversalContext ctx) {
-        final String serviceName = ctx.Identifier().getText();
-        final Object literalOrVar = antlr.argumentVisitor.visitGenericMapArgument(ctx.genericMapArgument());
-        if (GValue.valueInstanceOf(literalOrVar, Map.class))
-            return graphTraversal.call(serviceName, (GValue<Map>) literalOrVar, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
-        else
-            return graphTraversal.call(serviceName, (Map) literalOrVar, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
     }
 
     /**
