@@ -548,6 +548,7 @@ limitations under the License.
                         <exclude>**/go.sum</exclude>
                         <exclude>**/coverage.out</exclude>
                         <exclude>**/gremlinconsoletest.egg-info/**</exclude>
+                        <exclude>licenses/wow</exclude>
                     </excludes>
                     <licenses>
                         <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20"/>

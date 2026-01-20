@@ -42,12 +42,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_mapX
     Given the modern graph
@@ -60,12 +60,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_traversalX
     Given the modern graph
@@ -77,12 +77,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_map_traversalX
     Given the modern graph
@@ -95,12 +95,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   # Tests with argument lists (args)
 
@@ -114,12 +114,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_args_numeric
     Given the modern graph
@@ -131,12 +131,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_args_mapX
     Given the modern graph
@@ -149,12 +149,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_args_traversalX
     Given the modern graph
@@ -166,12 +166,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_args_map_traversalX
     Given the modern graph
@@ -184,12 +184,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_args_withMapInMiddle
     Given the modern graph
@@ -202,12 +202,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_V_testService_args_withMapInMiddle_numeric
     Given the modern graph
@@ -220,12 +220,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | v[1] |
-      | v[2] |
-      | v[3] |
-      | v[4] |
-      | v[5] |
-      | v[6] |
+      | v[marko] |
+      | v[vadas] |
+      | v[lop] |
+      | v[josh] |
+      | v[ripple] |
+      | v[peter] |
 
   Scenario: g_testService_args_withMapInMiddle_fromSource
     Given the empty graph
