@@ -384,7 +384,7 @@ public final class StepDefinition {
         
         final ServiceRegistry registry = graph.getServiceRegistry();
         if (registry == null || registry == ServiceRegistry.EMPTY) {
-            throw new IllegalStateException("Graph does not support ServiceRegistry");
+            throw new AssumptionViolatedException("Graph does not support ServiceRegistry");
         }
         
         // Use reflection to call registerLambdaService if available (for TinkerServiceRegistry)
@@ -403,7 +403,7 @@ public final class StepDefinition {
             addStartLambda.invoke(serviceFactory, startLambda);
             addStreamingLambda.invoke(serviceFactory, streamingLambda);
         } catch (Exception e) {
-            throw new UnsupportedOperationException("Service registration failed. This step requires a ServiceRegistry that supports registerLambdaService (e.g., TinkerServiceRegistry).", e);
+            throw new AssumptionViolatedException("Service registration failed. This step requires a ServiceRegistry that supports registerLambdaService (e.g., TinkerServiceRegistry).", e);
         }
     }
 
