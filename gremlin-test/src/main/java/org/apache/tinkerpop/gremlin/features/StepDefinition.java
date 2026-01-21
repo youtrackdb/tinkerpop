@@ -447,7 +447,10 @@ public final class StepDefinition {
                 (ctx, traverser, params) -> {
                     final Object args = params.get("args");
                     final List<?> argsList = args instanceof List ? (List<?>) args : Collections.emptyList();
-                    return IteratorUtils.of((Object) unwrapGValues(argsList));
+                    final Map<String, Object> result = new LinkedHashMap<>();
+                    result.put("args", unwrapGValues(argsList));
+                    result.put("traverser", traverser.get());
+                    return IteratorUtils.of((Object) result);
                 };
 
             final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);

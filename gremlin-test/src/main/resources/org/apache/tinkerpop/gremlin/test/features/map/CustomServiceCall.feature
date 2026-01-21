@@ -329,12 +329,12 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be unordered
       | result |
-      | l[arg1] |
-      | l[arg1] |
-      | l[arg1] |
-      | l[arg1] |
-      | l[arg1] |
-      | l[arg1] |
+      | m[{"args": "l[arg1]", "traverser": "v[marko]"}] |
+      | m[{"args": "l[arg1]", "traverser": "v[vadas]"}] |
+      | m[{"args": "l[arg1]", "traverser": "v[lop]"}] |
+      | m[{"args": "l[arg1]", "traverser": "v[josh]"}] |
+      | m[{"args": "l[arg1]", "traverser": "v[ripple]"}] |
+      | m[{"args": "l[arg1]", "traverser": "v[peter]"}] |
 
   # Validation tests - non-existent services should throw exceptions
 
