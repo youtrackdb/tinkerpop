@@ -42,6 +42,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.service.Service;
 import org.apache.tinkerpop.gremlin.structure.service.ServiceRegistry;
@@ -440,13 +441,13 @@ public final class StepDefinition {
                 (ctx, params) -> {
                     final Object args = params.get("args");
                     final List<?> argsList = args instanceof List ? (List<?>) args : Collections.emptyList();
-                    return IteratorUtils.of((Object) argsList);
+                    return IteratorUtils.of((Object) unwrapGValues(argsList));
                 };
             final TriFunction<Service.ServiceCallContext, Traverser.Admin<Object>, Map, Iterator<Object>> streamingLambda =
                 (ctx, traverser, params) -> {
                     final Object args = params.get("args");
                     final List<?> argsList = args instanceof List ? (List<?>) args : Collections.emptyList();
-                    return IteratorUtils.of((Object) argsList);
+                    return IteratorUtils.of((Object) unwrapGValues(argsList));
                 };
 
             final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);
@@ -457,6 +458,19 @@ public final class StepDefinition {
         } catch (Exception e) {
             throw new AssumptionViolatedException("Service registration failed. This step requires a ServiceRegistry that supports registerLambdaService (e.g., TinkerServiceRegistry).", e);
         }
+    }
+
+    private static List<Object> unwrapGValues(final List<?> argsList) {
+        if (argsList.isEmpty()) return Collections.emptyList();
+        final List<Object> unwrapped = new ArrayList<>(argsList.size());
+        for (Object arg : argsList) {
+            if (arg instanceof GValue) {
+                unwrapped.add(((GValue<?>) arg).get());
+            } else {
+                unwrapped.add(arg);
+            }
+        }
+        return unwrapped;
     }
 
     @Given("the traversal of")
