@@ -280,6 +280,62 @@ Feature: Custom Service Call Syntax - Direct Method Calls
     When iterated to list
     Then the result should be empty
 
+  # Argument processing tests - service returns the args list
+
+  Scenario: g_argEcho_args_returned_as_list
+    Given the empty graph
+    And registering service "argEcho" that returns args as list
+    And the traversal of
+      """
+      g.argEcho("arg1", 2, true)
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | l[arg1,d[2].i,true] |
+
+  Scenario: g_argEcho_no_args_returns_empty_list
+    Given the empty graph
+    And registering service "argEcho" that returns args as list
+    And the traversal of
+      """
+      g.argEcho()
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | l[] |
+
+  Scenario: g_argEcho_args_with_map_parameter
+    Given the empty graph
+    And registering service "argEcho" that returns args
+    And using the parameter xx1 defined as "m[{\"x\": \"y\"}]"
+    And the traversal of
+      """
+      g.argEcho(xx1, "arg2")
+      """
+    When iterated to list
+    Then the result should be ordered
+      | result |
+      | l[m[{"x": "y"}],arg2] |
+
+  Scenario: g_V_argEcho_args_streaming
+    Given the modern graph
+    And registering service "argEcho" that returns args as list
+    And the traversal of
+      """
+      g.V().argEcho("arg1")
+      """
+    When iterated to list
+    Then the result should be unordered
+      | result |
+      | l[arg1] |
+      | l[arg1] |
+      | l[arg1] |
+      | l[arg1] |
+      | l[arg1] |
+      | l[arg1] |
+
   # Validation tests - non-existent services should throw exceptions
 
   Scenario: g_callXnonExistentServiceX_shouldThrowException

@@ -195,7 +195,7 @@ public final class StepDefinition {
     private List<Pair<Pattern, Function<String,Object>>> objectMatcherConverters = new ArrayList<Pair<Pattern, Function<String,Object>>>() {{
         // expects json so that should port to the Gremlin script form - replace curly json braces with square ones
         // for Gremlin sake.
-        add(Pair.with(Pattern.compile("m\\[(.*)\\]"), s -> {
+        add(Pair.with(Pattern.compile("^m\\[(.*)\\]$"), s -> {
             try {
                 // read tree from JSON - can't parse right to Map as each m[] level needs to be managed individually
                 return convertToObject(mapper.readTree(s));
@@ -400,6 +400,58 @@ public final class StepDefinition {
             final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);
             final Method addStreamingLambda = serviceFactory.getClass().getMethod("addStreamingLambda", TriFunction.class);
             
+            addStartLambda.invoke(serviceFactory, startLambda);
+            addStreamingLambda.invoke(serviceFactory, streamingLambda);
+        } catch (Exception e) {
+            throw new AssumptionViolatedException("Service registration failed. This step requires a ServiceRegistry that supports registerLambdaService (e.g., TinkerServiceRegistry).", e);
+        }
+    }
+
+    @Given("registering service {string} that returns args")
+    public void registeringServiceThatReturnsArgs(final String serviceName) {
+        registerServiceReturningArgsList(serviceName);
+    }
+
+    @Given("registering service {string} that returns args as list")
+    public void registeringServiceThatReturnsArgsAsList(final String serviceName) {
+        registerServiceReturningArgsList(serviceName);
+    }
+
+    private void registerServiceReturningArgsList(final String serviceName) {
+        if (g == null) {
+            throw new IllegalStateException("Graph must be initialized before registering services. Use 'Given the {word} graph' first.");
+        }
+
+        final Graph graph = g.getGraph();
+        if (graph == null) {
+            throw new IllegalStateException("GraphTraversalSource does not have an associated Graph");
+        }
+
+        final ServiceRegistry registry = graph.getServiceRegistry();
+        if (registry == null || registry == ServiceRegistry.EMPTY) {
+            throw new AssumptionViolatedException("Graph does not support ServiceRegistry");
+        }
+
+        try {
+            final Method registerLambdaService = registry.getClass().getMethod("registerLambdaService", String.class);
+            final Object serviceFactory = registerLambdaService.invoke(registry, serviceName);
+
+            final BiFunction<Service.ServiceCallContext, Map, Iterator<Object>> startLambda =
+                (ctx, params) -> {
+                    final Object args = params.get("args");
+                    final List<?> argsList = args instanceof List ? (List<?>) args : Collections.emptyList();
+                    return IteratorUtils.of((Object) argsList);
+                };
+            final TriFunction<Service.ServiceCallContext, Traverser.Admin<Object>, Map, Iterator<Object>> streamingLambda =
+                (ctx, traverser, params) -> {
+                    final Object args = params.get("args");
+                    final List<?> argsList = args instanceof List ? (List<?>) args : Collections.emptyList();
+                    return IteratorUtils.of((Object) argsList);
+                };
+
+            final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);
+            final Method addStreamingLambda = serviceFactory.getClass().getMethod("addStreamingLambda", TriFunction.class);
+
             addStartLambda.invoke(serviceFactory, startLambda);
             addStreamingLambda.invoke(serviceFactory, streamingLambda);
         } catch (Exception e) {
