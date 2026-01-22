@@ -20,11 +20,7 @@ package org.apache.tinkerpop.gremlin.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.*;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -46,12 +42,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Start and stop Gremlin Server.
@@ -186,7 +179,8 @@ public class GremlinServer {
 
                     logger.info("Gremlin Server configured with worker thread pool of {}, gremlin pool of {} and boss thread pool of {}.",
                             settings.threadPoolWorker, settings.gremlinPool, settings.threadPoolBoss);
-                    logger.info("Channel started at port {}.", settings.port);
+                    logger.info("Channel started at port {}.",
+                            ((InetSocketAddress) serverSocketChannel.localAddress()).getPort());
 
                     serverReadyFuture.complete(serverGremlinExecutor);
                 } else {
@@ -200,6 +194,11 @@ public class GremlinServer {
         }
 
         return serverStarted;
+    }
+
+    public synchronized int getPort() {
+        if (serverSocketChannel == null) return -1;
+        return ((InetSocketAddress) serverSocketChannel.localAddress()).getPort();
     }
 
     private static Channelizer createChannelizer(final Settings settings) throws Exception {
