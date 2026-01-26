@@ -1,6 +1,4 @@
-g.addVertex()
 g.V();---
-g.VVV()
 g.tx().error()
 ;;
 
@@ -16,10 +14,6 @@ g.V().repeat(g.V().next()).times(10)
 ' '
 "  "
 g.V().has("person","name", startingWith(1234)).id()
-g.V('3').oute().limit(1)
-g.V('3').dedupe()
-g.V().order().bye('code').limit(1)
-g.V().horder().by(id)
 g.mergeE(["weight": 0.5, Direction.out: 1])
 g.mergeE(["weight": 0.5, Direction.in: 1])
 g.addE('knows').from(g.V(1))

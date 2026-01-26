@@ -38,9 +38,21 @@ import org.apache.tinkerpop.gremlin.language.translator.Translator;
 import org.apache.tinkerpop.gremlin.process.traversal.Merge;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.process.traversal.step.GValue;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.service.Service;
+import org.apache.tinkerpop.gremlin.structure.service.ServiceRegistry;
+import org.apache.tinkerpop.gremlin.util.function.TriFunction;
+import org.apache.tinkerpop.gremlin.util.iterator.EmptyIterator;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
+
+import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.function.BiFunction;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.ImmutablePath;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Tree;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -184,7 +196,7 @@ public final class StepDefinition {
     private List<Pair<Pattern, Function<String,Object>>> objectMatcherConverters = new ArrayList<Pair<Pattern, Function<String,Object>>>() {{
         // expects json so that should port to the Gremlin script form - replace curly json braces with square ones
         // for Gremlin sake.
-        add(Pair.with(Pattern.compile("m\\[(.*)\\]"), s -> {
+        add(Pair.with(Pattern.compile("^m\\[(.*)\\]$"), s -> {
             try {
                 // read tree from JSON - can't parse right to Map as each m[] level needs to be managed individually
                 return convertToObject(mapper.readTree(s));
@@ -238,9 +250,30 @@ public final class StepDefinition {
         add(Pair.with(Pattern.compile("dt\\[(.*)\\]"), DatetimeHelper::parse));
         add(Pair.with(Pattern.compile("uuid\\[(.*)\\]"), UUID::fromString));
 
-        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.id"), s -> g.V().has("name", s).id().next()));
-        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.sid"), s -> g.V().has("name", s).id().next().toString()));
-        add(Pair.with(Pattern.compile("v\\[(.+)\\]"), s -> detachVertex(g.V().has("name", s).next())));
+        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.id"), s -> {
+            try {
+                final Object id = Long.parseLong(s);
+                return g.V(id).id().next();
+            } catch (NumberFormatException e) {
+                return g.V().has("name", s).id().next();
+            }
+        }));
+        add(Pair.with(Pattern.compile("v\\[(.+)\\]\\.sid"), s -> {
+            try {
+                final Object id = Long.parseLong(s);
+                return g.V(id).id().next().toString();
+            } catch (NumberFormatException e) {
+                return g.V().has("name", s).id().next().toString();
+            }
+        }));
+        add(Pair.with(Pattern.compile("v\\[(.+)\\]"), s -> {
+            try {
+                final Object id = Long.parseLong(s);
+                return detachVertex(g.V(id).next());
+            } catch (NumberFormatException e) {
+                return detachVertex(g.V().has("name", s).next());
+            }
+        }));
         add(Pair.with(Pattern.compile("e\\[(.+)\\]\\.id"), s -> getEdgeId(g, s)));
         add(Pair.with(Pattern.compile("e\\[(.+)\\]\\.sid"), s -> getEdgeIdString(g, s)));
         add(Pair.with(Pattern.compile("e\\[(.+)\\]"), s -> getEdge(g, s)));
@@ -337,6 +370,110 @@ public final class StepDefinition {
     @Given("using the side effect {word} defined as {string}")
     public void usingTheSideEffectXDefinedAsX(final String key, final String value) {
         sideEffects.put(key, convertToString(value));
+    }
+
+    @Given("registering service {string}")
+    public void registeringService(final String serviceName) {
+        if (g == null) {
+            throw new IllegalStateException("Graph must be initialized before registering services. Use 'Given the {word} graph' first.");
+        }
+        
+        final Graph graph = g.getGraph();
+        if (graph == null) {
+            throw new IllegalStateException("GraphTraversalSource does not have an associated Graph");
+        }
+        
+        final ServiceRegistry registry = graph.getServiceRegistry();
+        if (registry == null || registry == ServiceRegistry.EMPTY) {
+            throw new AssumptionViolatedException("Graph does not support ServiceRegistry");
+        }
+        
+        // Use reflection to call registerLambdaService if available (for TinkerServiceRegistry)
+        try {
+            final Method registerLambdaService = registry.getClass().getMethod("registerLambdaService", String.class);
+            final Object serviceFactory = registerLambdaService.invoke(registry, serviceName);
+            
+            final BiFunction<Service.ServiceCallContext, Map, Iterator<Object>> startLambda = 
+                (ctx, params) -> EmptyIterator.instance();
+            final TriFunction<Service.ServiceCallContext, Traverser.Admin<Object>, Map, Iterator<Object>> streamingLambda = 
+                (ctx, traverser, params) -> IteratorUtils.of(traverser.get());
+            
+            final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);
+            final Method addStreamingLambda = serviceFactory.getClass().getMethod("addStreamingLambda", TriFunction.class);
+            
+            addStartLambda.invoke(serviceFactory, startLambda);
+            addStreamingLambda.invoke(serviceFactory, streamingLambda);
+        } catch (Exception e) {
+            throw new AssumptionViolatedException("Service registration failed. This step requires a ServiceRegistry that supports registerLambdaService (e.g., TinkerServiceRegistry).", e);
+        }
+    }
+
+    @Given("registering service {string} that returns args")
+    public void registeringServiceThatReturnsArgs(final String serviceName) {
+        registerServiceReturningArgsList(serviceName);
+    }
+
+    @Given("registering service {string} that returns args as list")
+    public void registeringServiceThatReturnsArgsAsList(final String serviceName) {
+        registerServiceReturningArgsList(serviceName);
+    }
+
+    private void registerServiceReturningArgsList(final String serviceName) {
+        if (g == null) {
+            throw new IllegalStateException("Graph must be initialized before registering services. Use 'Given the {word} graph' first.");
+        }
+
+        final Graph graph = g.getGraph();
+        if (graph == null) {
+            throw new IllegalStateException("GraphTraversalSource does not have an associated Graph");
+        }
+
+        final ServiceRegistry registry = graph.getServiceRegistry();
+        if (registry == null || registry == ServiceRegistry.EMPTY) {
+            throw new AssumptionViolatedException("Graph does not support ServiceRegistry");
+        }
+
+        try {
+            final Method registerLambdaService = registry.getClass().getMethod("registerLambdaService", String.class);
+            final Object serviceFactory = registerLambdaService.invoke(registry, serviceName);
+
+            final BiFunction<Service.ServiceCallContext, Map, Iterator<Object>> startLambda =
+                (ctx, params) -> {
+                    final Object args = params.get("args");
+                    final List<?> argsList = args instanceof List ? (List<?>) args : Collections.emptyList();
+                    return IteratorUtils.of((Object) unwrapGValues(argsList));
+                };
+            final TriFunction<Service.ServiceCallContext, Traverser.Admin<Object>, Map, Iterator<Object>> streamingLambda =
+                (ctx, traverser, params) -> {
+                    final Object args = params.get("args");
+                    final List<?> argsList = args instanceof List ? (List<?>) args : Collections.emptyList();
+                    final Map<String, Object> result = new LinkedHashMap<>();
+                    result.put("args", unwrapGValues(argsList));
+                    result.put("traverser", traverser.get());
+                    return IteratorUtils.of((Object) result);
+                };
+
+            final Method addStartLambda = serviceFactory.getClass().getMethod("addStartLambda", BiFunction.class);
+            final Method addStreamingLambda = serviceFactory.getClass().getMethod("addStreamingLambda", TriFunction.class);
+
+            addStartLambda.invoke(serviceFactory, startLambda);
+            addStreamingLambda.invoke(serviceFactory, streamingLambda);
+        } catch (Exception e) {
+            throw new AssumptionViolatedException("Service registration failed. This step requires a ServiceRegistry that supports registerLambdaService (e.g., TinkerServiceRegistry).", e);
+        }
+    }
+
+    private static List<Object> unwrapGValues(final List<?> argsList) {
+        if (argsList.isEmpty()) return Collections.emptyList();
+        final List<Object> unwrapped = new ArrayList<>(argsList.size());
+        for (Object arg : argsList) {
+            if (arg instanceof GValue) {
+                unwrapped.add(((GValue<?>) arg).get());
+            } else {
+                unwrapped.add(arg);
+            }
+        }
+        return unwrapped;
     }
 
     @Given("the traversal of")

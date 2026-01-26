@@ -34,6 +34,7 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty.Cardinality;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import java.util.function.BiFunction;
@@ -1912,6 +1913,49 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.call(antlr.genericVisitor.parseString(ctx.stringLiteral()), (GValue<Map>) literalOrVar, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
         else
             return graphTraversal.call(antlr.genericVisitor.parseString(ctx.stringLiteral()), (Map) literalOrVar, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_empty(final GremlinParser.TraversalMethod_customService_emptyContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        return graphTraversal.call(serviceName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_traversal(final GremlinParser.TraversalMethod_customService_traversalContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        return graphTraversal.call(serviceName, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_args(final GremlinParser.TraversalMethod_customService_argsContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
+        final List<Object> argsList = java.util.Arrays.asList(args);
+        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", argsList);
+        return graphTraversal.call(serviceName, params);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Traversal visitTraversalMethod_customService_args_traversal(final GremlinParser.TraversalMethod_customService_args_traversalContext ctx) {
+        final String serviceName = ctx.Identifier().getText();
+        final Object[] args = antlr.argumentVisitor.parseObjectVarargs(ctx.genericArgumentVarargs());
+        final Map<Object, Object> params = new java.util.LinkedHashMap<>();
+        params.put("args", java.util.Arrays.asList(args));
+        return graphTraversal.call(serviceName, params, antlr.tvisitor.visitNestedTraversal(ctx.nestedTraversal()));
     }
 
     /**
