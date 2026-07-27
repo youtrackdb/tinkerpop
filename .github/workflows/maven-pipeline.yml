@@ -54,7 +54,12 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref_name == 'ytdb-fork-3.8-dev' # Only deploy on push to ytdb-fork-3.8-dev branch
+    # Deploy on push to ytdb-fork-3.8-dev, or on a manual run triggered from that branch.
+    # The event is matched explicitly so that pull_request (and any future merge_group)
+    # runs can never deploy.
+    if: >-
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      && github.ref_name == 'ytdb-fork-3.8-dev'
     env:
       MAVEN_DEPLOY_REPO: "central::https://oss.sonatype.org/content/repositories/snapshots"
     steps:
