@@ -386,12 +386,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"brace-expansion@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "brace-expansion@npm:2.0.1"
+"brace-expansion@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "brace-expansion@npm:2.0.2"
   dependencies:
     balanced-match: "npm:^1.0.0"
-  checksum: 10c0/b358f2fe060e2d7a87aa015979ecea07f3c37d4018f8d6deb5bd4c229ad3a0384fe6029bb76cd8be63c81e516ee52d1a0673edbe2023d53a5191732ae3c3e49f
+  checksum: 10c0/6d117a4c793488af86b83172deb6af143e94c17bc53b0b3cec259733923b4ca84679d506ac261f4ba3c7ed37c46018e2ff442f9ce453af8643ecd64f4a54e6cf
   languageName: node
   linkType: hard
 
@@ -728,15 +728,15 @@ __metadata:
   linkType: hard
 
 "gremlin@file:../../src/main/javascript/gremlin-javascript::locator=browser%40workspace%3A.":
-  version: 3.7.2-alpha1
-  resolution: "gremlin@file:../../src/main/javascript/gremlin-javascript#../../src/main/javascript/gremlin-javascript::hash=4bd845&locator=browser%40workspace%3A."
+  version: 3.8.1-alpha1
+  resolution: "gremlin@file:../../src/main/javascript/gremlin-javascript#../../src/main/javascript/gremlin-javascript::hash=5b9713&locator=browser%40workspace%3A."
   dependencies:
     buffer: "npm:^6.0.3"
     eventemitter3: "npm:^5.0.1"
     readable-stream: "npm:^4.5.2"
     uuid: "npm:^9.0.1"
     ws: "npm:^8.16.0"
-  checksum: 10c0/1a8172b44851cb71eb11f5aee438034912762351d941684fae942a142d9d757e3be72bd136a5cc43dd81dd00594a17c36009d46ef06e0ba4120f7644aefa675e
+  checksum: 10c0/349ccd32940c0370fc6bcf82626439c12b3fefcd628660e4f9a5c4ab274bfc87413fffd918f6de0e9db78d01da2c1045109866e043e03eb748f886783f077b9f
   languageName: node
   linkType: hard
 
@@ -905,11 +905,11 @@ __metadata:
   linkType: hard
 
 "minimatch@npm:^9.0.1":
-  version: 9.0.3
-  resolution: "minimatch@npm:9.0.3"
+  version: 9.0.9
+  resolution: "minimatch@npm:9.0.9"
   dependencies:
-    brace-expansion: "npm:^2.0.1"
-  checksum: 10c0/85f407dcd38ac3e180f425e86553911d101455ca3ad5544d6a7cec16286657e4f8a9aa6695803025c55e31e35a91a2252b5dc8e7d527211278b8b65b4dbd5eac
+    brace-expansion: "npm:^2.0.2"
+  checksum: 10c0/0b6a58530dbb00361745aa6c8cffaba4c90f551afe7c734830bd95fd88ebf469dd7355a027824ea1d09e37181cfeb0a797fb17df60c15ac174303ac110eb7e86
   languageName: node
   linkType: hard
 
