@@ -56,7 +56,7 @@ public class OrderStepFilteringTest {
 
     @Test
     public void shouldRetainMissingGlobalKeyAtComparatorExtremes() throws Exception {
-        // Track 2 flips the default and can drop this reflection.
+        // Track 2 flips the global default, so this reflection can be dropped then.
         final Map<String, Object> missing = map("name", "missing");
         final Map<String, Object> young = map("name", "young", "age", 20);
         final Map<String, Object> old = map("name", "old", "age", 40);
@@ -73,7 +73,7 @@ public class OrderStepFilteringTest {
 
     @Test
     public void shouldKeepRetainedGlobalProjectionsAlignedWithComparators() throws Exception {
-        // Track 2 flips the default and can drop this reflection.
+        // Track 2 flips the global default, so this reflection can be dropped then.
         final Map<String, Object> missingAge = map("name", "z");
         final Map<String, Object> first = map("name", "a", "age", 20);
         final Map<String, Object> second = map("name", "b", "age", 20);
@@ -86,7 +86,7 @@ public class OrderStepFilteringTest {
 
     @Test
     public void shouldRetainMissingKeyInLocalOrder() throws Exception {
-        // Track 2 flips the default and can drop this reflection.
+        // The local step keeps filtering by default permanently, so this reflection stays.
         final Map<String, Object> missing = map("name", "missing");
         final Map<String, Object> young = map("name", "young", "age", 20);
         final Map<String, Object> old = map("name", "old", "age", 40);

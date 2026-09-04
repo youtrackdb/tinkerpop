@@ -51,6 +51,8 @@ import java.util.stream.Collectors;
 public final class OrderLocalStep<S, C extends Comparable> extends ScalarMapStep<S, S> implements ComparatorHolder<S, C>, ByModulating, TraversalParent, Seedable {
 
     private List<Pair<Traversal.Admin<S, C>, Comparator<C>>> comparators = new ArrayList<>();
+    // No current switch enables retention here. This branch keeps later changes cheap.
+    // Global ordering owns these semantics for this issue.
     private boolean filterUnproductiveTraversers = true;
     private final Random random = new Random();
 
