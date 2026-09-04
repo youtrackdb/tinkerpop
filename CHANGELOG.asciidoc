@@ -25,7 +25,7 @@ image::https://raw.githubusercontent.com/apache/tinkerpop/master/docs/static/ima
 
 This release also includes changes from <<release-3-7-6, 3.7.6>>.
 
-* Changed global `order()` to retain elements with unproductive `by()` modulators under a `null` sort key. Local ordering continues to filter those elements. The opt-in `StandardOrderSemanticsStrategy` restores filtering for global ordering.
+* Changed global `order()` in the YouTrackDB fork to retain traversers with unproductive `by()` modulators under a `null` sort key. `local(order().by(k))` follows this rule. `order(local).by(k)` continues to filter such traversers. The opt-in `StandardOrderSemanticsStrategy` restores filtering for global ordering.
 
 [[release-3-8-0]]
 === TinkerPop 3.8.0 (Release Date: November 12, 2025)

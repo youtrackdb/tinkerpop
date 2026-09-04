@@ -2570,7 +2570,8 @@ g.V().as('person').
 
 The two traversals above look nearly identical save the inclusion of `local()` which wraps a section of the traversal
 in an object-local traversal. The wrapper supplies one object at a time to its child traversal. It does not change the
-declared scope of an enclosed step. Here, `order()` retains global scope within each child traversal. The following
+declared scope of an enclosed step. Here, `order()` retains global scope within each child traversal. It therefore
+keeps a traverser when its `by()` modulator produces no value. See <<order-step, `order()`>> for details. The following
 `limit()` also operates within that child traversal.
 
 Local Step is quite similar in functionality to <<general-steps,Flat Map Step>> where it can often be confused.
@@ -3571,8 +3572,8 @@ g.V().order().by("age").elementMap()
 
 [NOTE, caption=YouTrackDB order semantics]
 ====
-Global `order()` keeps an element when its `by()` modulator produces no value. This rule also covers a modulator that
-contains a filter. The step sorts that element under a `null` key. The key sorts first with `Order.asc` and last with
+Global `order()` keeps a traverser when its `by()` modulator produces no value. This rule also covers a modulator that
+contains a filter. The step sorts that traverser under a `null` key. The key sorts first with `Order.asc` and last with
 `Order.desc`.
 
 `order(local)` keeps Apache TinkerPop behavior. It discards an element when its modulator produces no value. This
@@ -3582,8 +3583,9 @@ The `local()` wrapper does not change the scope of an enclosed order step. There
 the global retention rule. In contrast, `order(local).by(k)` follows the local filtering rule. This difference is
 intentional and permanent.
 
-`StandardOrderSemanticsStrategy` is opt in. It restores Apache TinkerPop filtering for global `order()`. The strategy
-is currently a no-op for `order(local)`.
+`StandardOrderSemanticsStrategy` is opt in. Apply it with
+`g.withStrategies(StandardOrderSemanticsStrategy.instance())`. It restores Apache TinkerPop filtering for global
+`order()`.
 
 A custom comparator on a global `by()` modulator can receive a raw `null` value. Previously, an unproductive modulator
 removed the element before comparison.
