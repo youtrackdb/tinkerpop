@@ -2570,9 +2570,11 @@ g.V().as('person').
 
 The two traversals above look nearly identical save the inclusion of `local()` which wraps a section of the traversal
 in an object-local traversal. The wrapper supplies one object at a time to its child traversal. It does not change the
-declared scope of an enclosed step. Here, `order()` retains global scope within each child traversal. It therefore
-keeps a traverser when its `by()` modulator produces no value. See <<order-step, `order()`>> for details. The following
-`limit()` also operates within that child traversal.
+declared scope of an enclosed step.
+
+Here, `order()` retains global scope within each child traversal. It therefore keeps a traverser when its `by()`
+modulator produces no value. See <<order-step, `order()`>> for details. The following `limit()` also operates within
+that child traversal.
 
 Local Step is quite similar in functionality to <<general-steps,Flat Map Step>> where it can often be confused.
 The primary distinction between these steps is that while `local()` preserves the path history of traversers as they
@@ -3576,7 +3578,7 @@ Global `order()` keeps a traverser when its `by()` modulator produces no value. 
 contains a filter. The step sorts that traverser under a `null` key. The key sorts first with `Order.asc` and last with
 `Order.desc`.
 
-`order(local)` keeps Apache TinkerPop behavior. It discards an element when its modulator produces no value. This
+`order(local)` keeps Apache TinkerPop behavior. It discards a traverser when its modulator produces no value. This
 filtering is the permanent default for local ordering.
 
 The `local()` wrapper does not change the scope of an enclosed order step. Therefore, `local(order().by(k))` follows
@@ -3588,7 +3590,7 @@ intentional and permanent.
 `order()`.
 
 A custom comparator on a global `by()` modulator can receive a raw `null` value. Previously, an unproductive modulator
-removed the element before comparison.
+removed the traverser before comparison.
 ====
 
 NOTE: Prior to version 3.3.4, ordering was defined by `Order.incr` for ascending order and `Order.decr` for descending
