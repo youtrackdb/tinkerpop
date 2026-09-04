@@ -99,8 +99,8 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
      * Configures filtering of traversers with an unproductive {@code by()} modulator. This flag moves only to the
      * filtering state, so strategy application order cannot change the outcome.
      */
-    public void setFilterUnproductiveTraversers(final boolean filterUnproductiveTraversers) {
-        this.filterUnproductiveTraversers |= filterUnproductiveTraversers;
+    public void enableFilteringUnproductiveTraversers() {
+        this.filterUnproductiveTraversers = true;
     }
 
     public boolean isFilteringUnproductiveTraversers() {

@@ -18,13 +18,20 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.step.map;
 
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -37,16 +44,57 @@ public class OrderStepFilteringTest {
 
         assertTrue(global.isFilteringUnproductiveTraversers());
         assertTrue(local.isFilteringUnproductiveTraversers());
-        global.setFilterUnproductiveTraversers(false);
-        local.setFilterUnproductiveTraversers(false);
-        assertTrue(global.isFilteringUnproductiveTraversers());
-        assertTrue(local.isFilteringUnproductiveTraversers());
         disableFiltering(global);
         disableFiltering(local);
-        global.setFilterUnproductiveTraversers(true);
-        local.setFilterUnproductiveTraversers(true);
+        assertFalse(global.isFilteringUnproductiveTraversers());
+        assertFalse(local.isFilteringUnproductiveTraversers());
+        global.enableFilteringUnproductiveTraversers();
+        local.enableFilteringUnproductiveTraversers();
         assertTrue(global.isFilteringUnproductiveTraversers());
         assertTrue(local.isFilteringUnproductiveTraversers());
+    }
+
+    @Test
+    public void shouldRetainMissingGlobalKeyAtComparatorExtremes() throws Exception {
+        // Track 2 flips the default and can drop this reflection.
+        final Map<String, Object> missing = map("name", "missing");
+        final Map<String, Object> young = map("name", "young", "age", 20);
+        final Map<String, Object> old = map("name", "old", "age", 40);
+        final Traversal.Admin<?, ?> ascending = __.inject(old, missing, young)
+                .order().by("age", Order.asc).asAdmin();
+        final Traversal.Admin<?, ?> descending = __.inject(young, missing, old)
+                .order().by("age", Order.desc).asAdmin();
+        disableFiltering(orderStep(ascending));
+        disableFiltering(orderStep(descending));
+
+        assertEquals(Arrays.asList(missing, young, old), ascending.toList());
+        assertEquals(Arrays.asList(old, young, missing), descending.toList());
+    }
+
+    @Test
+    public void shouldKeepRetainedGlobalProjectionsAlignedWithComparators() throws Exception {
+        // Track 2 flips the default and can drop this reflection.
+        final Map<String, Object> missingAge = map("name", "z");
+        final Map<String, Object> first = map("name", "a", "age", 20);
+        final Map<String, Object> second = map("name", "b", "age", 20);
+        final Traversal.Admin<?, ?> traversal = __.inject(second, missingAge, first)
+                .order().by("age", Order.asc).by("name", Order.asc).asAdmin();
+        disableFiltering(orderStep(traversal));
+
+        assertEquals(Arrays.asList(missingAge, first, second), traversal.toList());
+    }
+
+    @Test
+    public void shouldRetainMissingKeyInLocalOrder() throws Exception {
+        // Track 2 flips the default and can drop this reflection.
+        final Map<String, Object> missing = map("name", "missing");
+        final Map<String, Object> young = map("name", "young", "age", 20);
+        final Map<String, Object> old = map("name", "old", "age", 40);
+        final Traversal.Admin<?, ?> traversal = __.inject(Arrays.asList(old, missing, young))
+                .order(Scope.local).by("age", Order.asc).asAdmin();
+        disableFiltering(localOrderStep(traversal));
+
+        assertEquals(Arrays.asList(missing, young, old), traversal.next());
     }
 
     @Test
@@ -72,17 +120,32 @@ public class OrderStepFilteringTest {
         final OrderGlobalStep<?, ?> globalClone = global.clone();
         final OrderLocalStep<?, ?> localClone = local.clone();
 
-        assertTrue(!globalClone.isFilteringUnproductiveTraversers());
-        assertTrue(!localClone.isFilteringUnproductiveTraversers());
+        assertFalse(globalClone.isFilteringUnproductiveTraversers());
+        assertFalse(localClone.isFilteringUnproductiveTraversers());
     }
 
     private static OrderGlobalStep<?, ?> globalOrder() {
-        return TraversalHelper.getFirstStepOfAssignableClass(OrderGlobalStep.class, __.order().asAdmin()).get();
+        return orderStep(__.order().asAdmin());
     }
 
     private static OrderLocalStep<?, ?> localOrder() {
-        return TraversalHelper.getFirstStepOfAssignableClass(
-                OrderLocalStep.class, __.order(Scope.local).asAdmin()).get();
+        return localOrderStep(__.order(Scope.local).asAdmin());
+    }
+
+    private static OrderGlobalStep<?, ?> orderStep(final Traversal.Admin<?, ?> traversal) {
+        return TraversalHelper.getFirstStepOfAssignableClass(OrderGlobalStep.class, traversal).get();
+    }
+
+    private static OrderLocalStep<?, ?> localOrderStep(final Traversal.Admin<?, ?> traversal) {
+        return TraversalHelper.getFirstStepOfAssignableClass(OrderLocalStep.class, traversal).get();
+    }
+
+    private static Map<String, Object> map(final Object... entries) {
+        final Map<String, Object> map = new LinkedHashMap<>();
+        for (int i = 0; i < entries.length; i += 2) {
+            map.put((String) entries[i], entries[i + 1]);
+        }
+        return map;
     }
 
     private static void disableFiltering(final Object orderStep) throws Exception {

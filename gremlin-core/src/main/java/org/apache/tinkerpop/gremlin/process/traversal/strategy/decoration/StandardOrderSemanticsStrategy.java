@@ -41,9 +41,9 @@ public final class StandardOrderSemanticsStrategy
     @Override
     public void apply(final Traversal.Admin<?, ?> traversal) {
         TraversalHelper.getStepsOfClass(OrderGlobalStep.class, traversal)
-                .forEach(step -> step.setFilterUnproductiveTraversers(true));
+                .forEach(OrderGlobalStep::enableFilteringUnproductiveTraversers);
         TraversalHelper.getStepsOfClass(OrderLocalStep.class, traversal)
-                .forEach(step -> step.setFilterUnproductiveTraversers(true));
+                .forEach(OrderLocalStep::enableFilteringUnproductiveTraversers);
     }
 
     public static StandardOrderSemanticsStrategy instance() {

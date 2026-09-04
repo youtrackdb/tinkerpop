@@ -18,6 +18,9 @@
  */
 package org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration;
 
+import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
+import org.apache.tinkerpop.gremlin.process.remote.RemoteConnection;
+import org.apache.tinkerpop.gremlin.process.remote.traversal.strategy.decoration.RemoteStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
@@ -26,11 +29,15 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderLocalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class StandardOrderSemanticsStrategyTest {
 
@@ -76,6 +83,23 @@ public class StandardOrderSemanticsStrategyTest {
         StandardOrderSemanticsStrategy.instance().apply(traversal);
 
         assertTrue(order.isFilteringUnproductiveTraversers());
+    }
+
+    @Test
+    public void shouldRunAfterRemoteStrategy() {
+        final RemoteStrategy remoteStrategy = new RemoteStrategy(mock(RemoteConnection.class));
+
+        assertTrue(remoteStrategy.applyPost().contains(StandardOrderSemanticsStrategy.class));
+    }
+
+    @Test
+    public void shouldNotBelongToAnyRegisteredDefaultStrategySet() {
+        assertFalse(TraversalStrategies.GlobalCache.getStrategies(Graph.class)
+                .getStrategy(StandardOrderSemanticsStrategy.class).isPresent());
+        assertFalse(TraversalStrategies.GlobalCache.getStrategies(EmptyGraph.class)
+                .getStrategy(StandardOrderSemanticsStrategy.class).isPresent());
+        assertFalse(TraversalStrategies.GlobalCache.getStrategies(GraphComputer.class)
+                .getStrategy(StandardOrderSemanticsStrategy.class).isPresent());
     }
 
     private static void disableFiltering(final Object orderStep) throws Exception {

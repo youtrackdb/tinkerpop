@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraver
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Merge;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalExplanation;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.io.IoX;
@@ -269,6 +270,13 @@ public class GryoMapperTest {
     public void shouldHandleDuration() throws Exception  {
         final Duration o = Duration.ZERO;
         assertEquals(o, serializeDeserialize(o, Duration.class));
+    }
+
+    @Test
+    public void shouldHandleStandardOrderSemanticsStrategy() throws Exception {
+        final StandardOrderSemanticsStrategy strategy = StandardOrderSemanticsStrategy.instance();
+
+        assertEquals(strategy, serializeDeserialize(strategy, StandardOrderSemanticsStrategy.class));
     }
 
     @Test
