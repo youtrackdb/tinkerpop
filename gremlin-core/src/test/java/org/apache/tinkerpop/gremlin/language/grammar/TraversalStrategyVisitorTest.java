@@ -28,6 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.PartitionStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SeedStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SubgraphStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.CountStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.ProductiveByStrategy;
@@ -65,6 +66,7 @@ public class TraversalStrategyVisitorTest {
     public static Iterable<Object[]> generateTestParameters() {
         return Arrays.asList(new Object[][]{
                 {"ReadOnlyStrategy", ReadOnlyStrategy.instance()},
+                {"StandardOrderSemanticsStrategy", StandardOrderSemanticsStrategy.instance()},
                 {"new SeedStrategy(seed: 999999)", SeedStrategy.build().seed(999999).create()},
                 {"SeedStrategy(seed: 999999)", SeedStrategy.build().seed(999999).create()},
                 {"new PartitionStrategy(partitionKey: 'k', includeMetaProperties: true)", PartitionStrategy.build().partitionKey("k").includeMetaProperties(true).create()},

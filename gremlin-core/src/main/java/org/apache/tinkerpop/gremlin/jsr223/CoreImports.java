@@ -83,6 +83,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.Halted
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.OptionsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.PartitionStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SeedStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ReferenceElementStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SubgraphStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.MatchAlgorithmStrategy;
@@ -287,6 +288,7 @@ public final class CoreImports {
         CLASS_IMPORTS.add(ReadOnlyStrategy.class);
         CLASS_IMPORTS.add(ReferenceElementStrategy.class);
         CLASS_IMPORTS.add(SeedStrategy.class);
+        CLASS_IMPORTS.add(StandardOrderSemanticsStrategy.class);
         CLASS_IMPORTS.add(StandardVerificationStrategy.class);
         CLASS_IMPORTS.add(EdgeLabelVerificationStrategy.class);
         CLASS_IMPORTS.add(VertexProgramRestrictionStrategy.class);

@@ -32,6 +32,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.Halted
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.OptionsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.PartitionStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SeedStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SubgraphStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.MatchAlgorithmStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ProfileStrategy;
@@ -248,6 +249,7 @@ public interface TraversalStrategies extends Serializable, Cloneable, Iterable<T
             put(OptionsStrategy.class.getSimpleName(), OptionsStrategy.class);
             put(PartitionStrategy.class.getSimpleName(), PartitionStrategy.class);
             put(SeedStrategy.class.getSimpleName(), SeedStrategy.class);
+            put(StandardOrderSemanticsStrategy.class.getSimpleName(), StandardOrderSemanticsStrategy.class);
             put(SubgraphStrategy.class.getSimpleName(), SubgraphStrategy.class);
             put(VertexProgramStrategy.class.getSimpleName(), VertexProgramStrategy.class);
 

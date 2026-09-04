@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 public final class OrderLocalStep<S, C extends Comparable> extends ScalarMapStep<S, S> implements ComparatorHolder<S, C>, ByModulating, TraversalParent, Seedable {
 
     private List<Pair<Traversal.Admin<S, C>, Comparator<C>>> comparators = new ArrayList<>();
+    private boolean filterUnproductiveTraversers = true;
     private final Random random = new Random();
 
     public OrderLocalStep(final Traversal.Admin traversal) {
@@ -60,6 +61,18 @@ public final class OrderLocalStep<S, C extends Comparable> extends ScalarMapStep
     @Override
     public void resetSeed(long seed) {
         this.random.setSeed(seed);
+    }
+
+    /**
+     * Configures filtering of traversers with an unproductive {@code by()} modulator. This flag moves only to the
+     * filtering state, so strategy application order cannot change the outcome.
+     */
+    public void setFilterUnproductiveTraversers(final boolean filterUnproductiveTraversers) {
+        this.filterUnproductiveTraversers |= filterUnproductiveTraversers;
+    }
+
+    public boolean isFilteringUnproductiveTraversers() {
+        return this.filterUnproductiveTraversers;
     }
 
     @Override
@@ -106,10 +119,16 @@ public final class OrderLocalStep<S, C extends Comparable> extends ScalarMapStep
         final List<Pair<S, List<C>>> filteredAndModulated = new ArrayList<>();
         final List<Traversal.Admin<S, C>> modulators = relevantComparators.stream().map(Pair::getValue0).collect(Collectors.toList());
         for (S s : original) {
-            // filter out unproductive by()
-            final List<C> modulations = modulators.stream().map(t -> TraversalUtil.produce(s, t)).
-                    filter(TraversalProduct::isProductive).
-                    map(product -> (C) product.get()).collect(Collectors.toList());
+            // filter out unproductive by(), or preserve its position for retaining order semantics
+            final List<C> modulations = new ArrayList<>(modulators.size());
+            for (final Traversal.Admin<S, C> modulator : modulators) {
+                final TraversalProduct product = TraversalUtil.produce(s, modulator);
+                if (product.isProductive()) {
+                    modulations.add((C) product.get());
+                } else if (!this.filterUnproductiveTraversers) {
+                    modulations.add(null);
+                }
+            }
 
             // when sizes arent the same it means a by() wasn't productive and it is ignored
             if (modulations.size() == modulators.size()) {
@@ -181,6 +200,7 @@ public final class OrderLocalStep<S, C extends Comparable> extends ScalarMapStep
         for (int i = 0; i < this.comparators.size(); i++) {
             result ^= this.comparators.get(i).hashCode() * (i + 1);
         }
+        result ^= Boolean.hashCode(this.filterUnproductiveTraversers);
         return result;
     }
 
