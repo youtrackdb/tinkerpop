@@ -38,11 +38,11 @@ import static org.junit.Assert.assertTrue;
 public class OrderStepFilteringTest {
 
     @Test
-    public void shouldFilterByDefaultAndOnlyEnableFiltering() throws Exception {
+    public void shouldUseScopeSpecificDefaultsAndOnlyEnableFiltering() throws Exception {
         final OrderGlobalStep<?, ?> global = globalOrder();
         final OrderLocalStep<?, ?> local = localOrder();
 
-        assertTrue(global.isFilteringUnproductiveTraversers());
+        assertFalse(global.isFilteringUnproductiveTraversers());
         assertTrue(local.isFilteringUnproductiveTraversers());
         disableFiltering(global);
         disableFiltering(local);
@@ -55,8 +55,7 @@ public class OrderStepFilteringTest {
     }
 
     @Test
-    public void shouldRetainMissingGlobalKeyAtComparatorExtremes() throws Exception {
-        // Track 2 flips the global default, so this reflection can be dropped then.
+    public void shouldRetainMissingGlobalKeyAtComparatorExtremes() {
         final Map<String, Object> missing = map("name", "missing");
         final Map<String, Object> young = map("name", "young", "age", 20);
         final Map<String, Object> old = map("name", "old", "age", 40);
@@ -64,22 +63,18 @@ public class OrderStepFilteringTest {
                 .order().by("age", Order.asc).asAdmin();
         final Traversal.Admin<?, ?> descending = __.inject(young, missing, old)
                 .order().by("age", Order.desc).asAdmin();
-        disableFiltering(orderStep(ascending));
-        disableFiltering(orderStep(descending));
 
         assertEquals(Arrays.asList(missing, young, old), ascending.toList());
         assertEquals(Arrays.asList(old, young, missing), descending.toList());
     }
 
     @Test
-    public void shouldKeepRetainedGlobalProjectionsAlignedWithComparators() throws Exception {
-        // Track 2 flips the global default, so this reflection can be dropped then.
+    public void shouldKeepRetainedGlobalProjectionsAlignedWithComparators() {
         final Map<String, Object> missingAge = map("name", "z");
         final Map<String, Object> first = map("name", "a", "age", 20);
         final Map<String, Object> second = map("name", "b", "age", 20);
         final Traversal.Admin<?, ?> traversal = __.inject(second, missingAge, first)
                 .order().by("age", Order.asc).by("name", Order.asc).asAdmin();
-        disableFiltering(orderStep(traversal));
 
         assertEquals(Arrays.asList(missingAge, first, second), traversal.toList());
     }
@@ -99,28 +94,29 @@ public class OrderStepFilteringTest {
 
     @Test
     public void shouldIncludeFilteringStateInHashCode() throws Exception {
-        final OrderGlobalStep<?, ?> global = globalOrder();
+        final OrderGlobalStep<?, ?> globalWithFiltering = globalOrder();
         final OrderGlobalStep<?, ?> globalWithoutFiltering = globalOrder();
-        final OrderLocalStep<?, ?> local = localOrder();
+        final OrderLocalStep<?, ?> localWithFiltering = localOrder();
         final OrderLocalStep<?, ?> localWithoutFiltering = localOrder();
-        disableFiltering(globalWithoutFiltering);
+        globalWithFiltering.enableFilteringUnproductiveTraversers();
+        localWithFiltering.enableFilteringUnproductiveTraversers();
         disableFiltering(localWithoutFiltering);
 
-        assertNotEquals(global.hashCode(), globalWithoutFiltering.hashCode());
-        assertNotEquals(local.hashCode(), localWithoutFiltering.hashCode());
+        assertNotEquals(globalWithFiltering.hashCode(), globalWithoutFiltering.hashCode());
+        assertNotEquals(localWithFiltering.hashCode(), localWithoutFiltering.hashCode());
     }
 
     @Test
     public void shouldPreserveFilteringStateWhenCloned() throws Exception {
         final OrderGlobalStep<?, ?> global = globalOrder();
         final OrderLocalStep<?, ?> local = localOrder();
-        disableFiltering(global);
+        global.enableFilteringUnproductiveTraversers();
         disableFiltering(local);
 
         final OrderGlobalStep<?, ?> globalClone = global.clone();
         final OrderLocalStep<?, ?> localClone = local.clone();
 
-        assertFalse(globalClone.isFilteringUnproductiveTraversers());
+        assertTrue(globalClone.isFilteringUnproductiveTraversers());
         assertFalse(localClone.isFilteringUnproductiveTraversers());
     }
 

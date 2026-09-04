@@ -28,6 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Seedable;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.CollectingBarrierStep;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.ProjectedTraverser;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.util.TraverserSet;
@@ -50,6 +51,10 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 /**
+ * This fork retains traversers with an unproductive {@code by()} modulator by default. Their sort key is {@code null},
+ * which sorts first in ascending order and last in descending order. {@link StandardOrderSemanticsStrategy} restores
+ * the Apache TinkerPop behavior of filtering those traversers.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBarrierStep<S> implements ComparatorHolder<S, C>, TraversalParent, ByModulating, Seedable {
@@ -57,7 +62,8 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
     private List<Pair<Traversal.Admin<S, C>, Comparator<C>>> comparators = new ArrayList<>();
     private MultiComparator<C> multiComparator = null;
     private long limit = Long.MAX_VALUE;
-    private boolean filterUnproductiveTraversers = true;
+    // The fork default retains unproductive traversers by projecting a null sort key.
+    private boolean filterUnproductiveTraversers = false;
     private final Random random = new Random();
 
     public OrderGlobalStep(final Traversal.Admin traversal) {
@@ -82,7 +88,7 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
     @Override
     public void processAllStarts() {
         while (this.starts.hasNext()) {
-            // only add the traverser if the comparator traversal was productive
+            // Add the traverser after each comparator traversal either produces a key or retains a null key.
             this.createProjectedTraverser(this.starts.next()).ifPresent(traverserSet::add);
         }
     }

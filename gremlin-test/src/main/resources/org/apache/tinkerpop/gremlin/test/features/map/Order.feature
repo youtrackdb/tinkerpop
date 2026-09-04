@@ -260,6 +260,7 @@ Feature: Step - order()
       | v[josh]   |
       | v[peter] |
 
+  @InsertionOrderingRequired
   Scenario: g_V_order_byXageX
     Given the modern graph
     And the traversal of
@@ -269,6 +270,8 @@ Feature: Step - order()
     When iterated to list
     Then the result should be ordered
       | result |
+      | v[lop] |
+      | v[ripple] |
       | v[vadas] |
       | v[marko] |
       | v[josh]   |
@@ -312,6 +315,7 @@ Feature: Step - order()
     When iterated to list
     Then the result should be ordered
       | result |
+      | v[lop] |
       | v[vadas] |
       | v[marko] |
       | v[josh]   |
