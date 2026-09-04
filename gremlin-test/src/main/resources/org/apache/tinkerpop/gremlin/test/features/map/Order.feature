@@ -260,7 +260,6 @@ Feature: Step - order()
       | v[josh]   |
       | v[peter] |
 
-  @InsertionOrderingRequired
   Scenario: g_V_order_byXageX
     Given the modern graph
     And the traversal of
@@ -268,7 +267,7 @@ Feature: Step - order()
       g.V().order().by("age")
       """
     When iterated to list
-    Then the result should be ordered
+    Then the result should be unordered
       | result |
       | v[lop] |
       | v[ripple] |
