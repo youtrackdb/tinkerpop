@@ -27,7 +27,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversal
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 /**
- * Configures {@code order()} steps to filter traversers with unproductive {@code by()} modulators.
+ * Configures global {@code order()} steps to use standard Apache TinkerPop filtering semantics by
+ * filtering traversers with unproductive {@code by()} modulators. By default, global {@code order()}
+ * retains traversers with missing or {@code null} sort keys. This strategy is an opt-in compatibility
+ * mechanism that restores filtering semantics for global ordering. Local {@code order(local)} already
+ * keeps filtering semantics.
  */
 public final class StandardOrderSemanticsStrategy
         extends AbstractTraversalStrategy<TraversalStrategy.DecorationStrategy>

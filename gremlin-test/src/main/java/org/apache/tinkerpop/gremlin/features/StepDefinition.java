@@ -99,11 +99,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -545,6 +547,68 @@ public final class StepDefinition {
         // skip the header in the dataTable
         final Object[] expected = dataTable.asList().stream().skip(1).map(this::convertToObject).toArray();
         assertThat(actual, contains(expected));
+    }
+
+    @Then("the result should be ordered with ties")
+    public void theResultShouldBeOrderedWithTies(final DataTable dataTable) {
+        assertThatNoErrorWasThrown();
+
+        final List<List<String>> rows = dataTable.asLists();
+        if (rows.isEmpty()) {
+            throw new IllegalArgumentException("The result table must contain group and result columns");
+        }
+
+        final List<String> header = rows.get(0);
+        final int groupIndex = header.indexOf("group");
+        final int resultIndex = header.indexOf("result");
+        if (groupIndex < 0 || resultIndex < 0 || header.lastIndexOf("group") != groupIndex
+                || header.lastIndexOf("result") != resultIndex) {
+            throw new IllegalArgumentException("The result table must contain one group and one result column");
+        }
+
+        final List<Object> actual = translateResultsToActual();
+        assertEquals(rows.size() - 1, actual.size());
+
+        final Set<String> completedGroups = new HashSet<>();
+        final List<Object> expectedGroup = new ArrayList<>();
+        String currentGroup = null;
+        int actualOffset = 0;
+        for (int ix = 1; ix < rows.size(); ix++) {
+            final List<String> row = rows.get(ix);
+            if (row.size() != header.size()) {
+                throw new IllegalArgumentException("Every result row must match the table header");
+            }
+
+            final String group = row.get(groupIndex);
+            if (group == null || group.isEmpty()) {
+                throw new IllegalArgumentException("Every result row must have a group");
+            }
+
+            if (!group.equals(currentGroup)) {
+                if (currentGroup != null) {
+                    assertTieGroup(actual, actualOffset, currentGroup, expectedGroup);
+                    completedGroups.add(currentGroup);
+                    final int completedGroupSize = expectedGroup.size();
+                    actualOffset += completedGroupSize;
+                    expectedGroup.clear();
+                }
+                if (completedGroups.contains(group)) {
+                    throw new IllegalArgumentException(String.format("Group %s must be contiguous", group));
+                }
+                currentGroup = group;
+            }
+            expectedGroup.add(convertToObject(row.get(resultIndex)));
+        }
+
+        if (currentGroup != null) {
+            assertTieGroup(actual, actualOffset, currentGroup, expectedGroup);
+        }
+    }
+
+    private static void assertTieGroup(final List<Object> actual, final int offset, final String group,
+                                       final List<Object> expected) {
+        assertThat(String.format("Tie group %s was not in the expected position", group),
+                actual.subList(offset, offset + expected.size()), containsInAnyOrder(expected.toArray()));
     }
 
     @Then("the result should be of")
