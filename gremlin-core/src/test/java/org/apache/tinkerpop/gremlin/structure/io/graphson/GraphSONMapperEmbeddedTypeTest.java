@@ -33,6 +33,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.BulkSet;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.TraversalStrategyProxy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.HaltedTraverserStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SeedStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.MatchAlgorithmStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalExplanation;
 import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
@@ -75,6 +76,7 @@ import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 /**
@@ -484,6 +486,16 @@ public class GraphSONMapperEmbeddedTypeTest extends AbstractGraphSONTest {
         assertThat(strategyProxy, instanceOf(TraversalStrategyProxy.class));
         assertEquals(SeedStrategy.class, strategyProxy.getStrategyClass());
         assertEquals(999, strategyProxy.getConfiguration().getInt("seed"));
+    }
+
+    @Test
+    public void shouldHandleStandardOrderSemanticsStrategy() throws Exception {
+        assumeThat(version, either(startsWith("v2")).or(startsWith("v3")));
+
+        final TraversalStrategyProxy strategyProxy = serializeDeserialize(
+                mapper, StandardOrderSemanticsStrategy.instance(), TraversalStrategyProxy.class);
+        assertEquals(StandardOrderSemanticsStrategy.class, strategyProxy.getStrategyClass());
+        assertTrue(strategyProxy.getConfiguration().isEmpty());
     }
 
     @Test

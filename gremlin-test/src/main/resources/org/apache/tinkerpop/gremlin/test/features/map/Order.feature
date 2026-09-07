@@ -267,12 +267,14 @@ Feature: Step - order()
       g.V().order().by("age")
       """
     When iterated to list
-    Then the result should be ordered
-      | result |
-      | v[vadas] |
-      | v[marko] |
-      | v[josh]   |
-      | v[peter] |
+    Then the result should be ordered with ties
+      | group | result |
+      | null  | v[lop] |
+      | null  | v[ripple] |
+      | 27    | v[vadas] |
+      | 29    | v[marko] |
+      | 32    | v[josh]   |
+      | 35    | v[peter] |
 
   Scenario: g_V_fold_orderXlocalX_byXageX
     Given the modern graph
@@ -312,6 +314,7 @@ Feature: Step - order()
     When iterated to list
     Then the result should be ordered
       | result |
+      | v[lop] |
       | v[vadas] |
       | v[marko] |
       | v[josh]   |

@@ -58,6 +58,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.Halted
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.OptionsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.PartitionStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SeedStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SubgraphStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.MatchAlgorithmStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.AdjacentToIncidentStrategy;
@@ -309,7 +310,7 @@ public enum GryoVersion {
             add(GryoTypeReg.of(StarGraph.StarAdjacentVertex.class, 201));
             add(GryoTypeReg.of(ComputerGraph.class, 202));
             add(GryoTypeReg.of(ComputerGraph.State.class, 203));
-            add(GryoTypeReg.of(ComputerGraph.ComputerAdjacentVertex.class, 204));                    // ***LAST ID***
+            add(GryoTypeReg.of(ComputerGraph.ComputerAdjacentVertex.class, 204));
 
             add(GryoTypeReg.of(Edge.class, 65, new GryoSerializersV3.EdgeSerializer()));
             add(GryoTypeReg.of(Vertex.class, 66, new GryoSerializersV3.VertexSerializer()));
@@ -344,7 +345,7 @@ public enum GryoVersion {
             add(GryoTypeReg.of(Pick.class, 137));
             add(GryoTypeReg.of(DT.class, 198));
             add(GryoTypeReg.of(Merge.class, 196));
-            add(GryoTypeReg.of(GType.class, 200));          // ***LAST ID***
+            add(GryoTypeReg.of(GType.class, 200));
             add(GryoTypeReg.of(HashSetSupplier.class, 136, new UtilSerializers.HashSetSupplierSerializer()));
             add(GryoTypeReg.of(MultiComparator.class, 165));
 
@@ -353,6 +354,7 @@ public enum GryoVersion {
             add(GryoTypeReg.of(PartitionStrategy.class, 140, new JavaSerializer()));
             add(GryoTypeReg.of(SubgraphStrategy.class, 141, new JavaSerializer()));
             add(GryoTypeReg.of(SeedStrategy.class, 192, new JavaSerializer()));
+            add(GryoTypeReg.of(StandardOrderSemanticsStrategy.class, 205));          // ***LAST ID***
             add(GryoTypeReg.of(VertexProgramStrategy.class, 142, new JavaSerializer()));
             add(GryoTypeReg.of(MatchAlgorithmStrategy.class, 143));
             add(GryoTypeReg.of(MatchStep.GreedyMatchAlgorithm.class, 144));
@@ -521,7 +523,7 @@ public enum GryoVersion {
             add(GryoTypeReg.of(StarGraph.StarAdjacentVertex.class, 201));
             add(GryoTypeReg.of(ComputerGraph.class, 202));
             add(GryoTypeReg.of(ComputerGraph.State.class, 203));
-            add(GryoTypeReg.of(ComputerGraph.ComputerAdjacentVertex.class, 204));                    // ***LAST ID***
+            add(GryoTypeReg.of(ComputerGraph.ComputerAdjacentVertex.class, 204));
 
             add(GryoTypeReg.of(Edge.class, 65, new GryoSerializersV1.EdgeSerializer()));
             add(GryoTypeReg.of(Vertex.class, 66, new GryoSerializersV1.VertexSerializer()));
@@ -555,7 +557,7 @@ public enum GryoVersion {
             add(GryoTypeReg.of(Pick.class, 137));
             add(GryoTypeReg.of(DT.class, 198));
             add(GryoTypeReg.of(Merge.class, 196));
-            add(GryoTypeReg.of(GType.class, 200));          // ***LAST ID***
+            add(GryoTypeReg.of(GType.class, 200));
             add(GryoTypeReg.of(HashSetSupplier.class, 136, new UtilSerializers.HashSetSupplierSerializer()));
             add(GryoTypeReg.of(MultiComparator.class, 165));
 
@@ -607,6 +609,7 @@ public enum GryoVersion {
             add(GryoTypeReg.of(PartitionStrategy.class, 140, new JavaSerializer()));
             add(GryoTypeReg.of(SubgraphStrategy.class, 141, new JavaSerializer()));
             add(GryoTypeReg.of(SeedStrategy.class, 192, new JavaSerializer()));
+            add(GryoTypeReg.of(StandardOrderSemanticsStrategy.class, 205));          // ***LAST ID***
             add(GryoTypeReg.of(VertexProgramStrategy.class, 142, new JavaSerializer()));
             add(GryoTypeReg.of(MatchAlgorithmStrategy.class, 143));
             add(GryoTypeReg.of(MatchStep.GreedyMatchAlgorithm.class, 144));

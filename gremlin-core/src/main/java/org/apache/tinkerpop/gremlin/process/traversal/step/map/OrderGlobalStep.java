@@ -28,6 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.Seedable;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.CollectingBarrierStep;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.ProjectedTraverser;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.util.TraverserSet;
@@ -50,6 +51,10 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 /**
+ * This fork retains traversers with an unproductive {@code by()} modulator by default. Their sort key is {@code null},
+ * which sorts first in ascending order and last in descending order. {@link StandardOrderSemanticsStrategy} restores
+ * the Apache TinkerPop behavior of filtering those traversers.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBarrierStep<S> implements ComparatorHolder<S, C>, TraversalParent, ByModulating, Seedable {
@@ -57,6 +62,8 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
     private List<Pair<Traversal.Admin<S, C>, Comparator<C>>> comparators = new ArrayList<>();
     private MultiComparator<C> multiComparator = null;
     private long limit = Long.MAX_VALUE;
+    // The fork default retains unproductive traversers by projecting a null sort key.
+    private boolean filterUnproductiveTraversers = false;
     private final Random random = new Random();
 
     public OrderGlobalStep(final Traversal.Admin traversal) {
@@ -81,7 +88,7 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
     @Override
     public void processAllStarts() {
         while (this.starts.hasNext()) {
-            // only add the traverser if the comparator traversal was productive
+            // Add the traverser after each comparator traversal either produces a key or retains a null key.
             this.createProjectedTraverser(this.starts.next()).ifPresent(traverserSet::add);
         }
     }
@@ -92,6 +99,18 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
 
     public long getLimit() {
         return this.limit;
+    }
+
+    /**
+     * Configures filtering of traversers with an unproductive {@code by()} modulator. This flag moves only to the
+     * filtering state, so strategy application order cannot change the outcome.
+     */
+    public void enableFilteringUnproductiveTraversers() {
+        this.filterUnproductiveTraversers = true;
+    }
+
+    public boolean isFilteringUnproductiveTraversers() {
+        return this.filterUnproductiveTraversers;
     }
 
     @Override
@@ -138,6 +157,7 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
         for (int i = 0; i < this.comparators.size(); i++) {
             result ^= this.comparators.get(i).hashCode() * (i + 1);
         }
+        result ^= Boolean.hashCode(this.filterUnproductiveTraversers);
         return result;
     }
 
@@ -181,8 +201,13 @@ public final class OrderGlobalStep<S, C extends Comparable> extends CollectingBa
         final List<Object> projections = new ArrayList<>(this.comparators.size());
         for (final Pair<Traversal.Admin<S, C>, Comparator<C>> pair : this.comparators) {
             final TraversalProduct product = TraversalUtil.produce(traverser, pair.getValue0());
-            if (!product.isProductive()) break;
-            projections.add(product.get());
+            if (product.isProductive()) {
+                projections.add(product.get());
+            } else if (this.filterUnproductiveTraversers) {
+                break;
+            } else {
+                projections.add(null);
+            }
         }
 
         // if a traversal wasn't productive then the sizes wont match and it will filter

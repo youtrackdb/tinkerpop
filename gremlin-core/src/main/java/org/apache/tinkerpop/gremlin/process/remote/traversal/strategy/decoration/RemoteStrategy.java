@@ -32,6 +32,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.Partit
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.RequirementsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SackStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SideEffectStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SubgraphStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
@@ -64,6 +65,7 @@ public final class RemoteStrategy extends AbstractTraversalStrategy<TraversalStr
         add(RequirementsStrategy.class);
         add(SackStrategy.class);
         add(SideEffectStrategy.class);
+        add(StandardOrderSemanticsStrategy.class);
         add(SubgraphStrategy.class);
     }};
 

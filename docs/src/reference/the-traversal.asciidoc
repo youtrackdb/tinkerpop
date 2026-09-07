@@ -986,9 +986,9 @@ g.V().group().by(bothE().count()).by(count())  <3>
 <2> `by('name')` will process the grouped elements by their name (*element property projection*).
 <3> `by(count())` will count the number of elements in each group (*traversal*).
 
-When a `by()` modulator does not produce a result, it is deemed "unproductive". An "unproductive" modulator will lead
-to the filtering of the traverser it is currently working with. The filtering will manifest in various ways depending
-on the step.
+When a `by()` modulator does not produce a result, it is deemed "unproductive". An unproductive modulator usually
+filters the current traverser. The global `order()` step is an exception. It keeps the traverser under a `null` sort
+key. The filtering behavior otherwise depends on the step.
 
 [gremlin-groovy,modern]
 ----
@@ -2569,8 +2569,12 @@ g.V().as('person').
 <2> For every person, get their two most historic locations.
 
 The two traversals above look nearly identical save the inclusion of `local()` which wraps a section of the traversal
-in an object-local traversal. As such, the `order().by()` and the `limit()` refer to a particular object, not to the
-stream as a whole.
+in an object-local traversal. The wrapper supplies one object at a time to its child traversal. It does not change the
+declared scope of an enclosed step.
+
+Here, `order()` retains global scope within each child traversal. It therefore keeps a traverser when its `by()`
+modulator produces no value. See <<order-step, `order()`>> for details. The following `limit()` also operates within
+that child traversal.
 
 Local Step is quite similar in functionality to <<general-steps,Flat Map Step>> where it can often be confused.
 The primary distinction between these steps is that while `local()` preserves the path history of traversers as they
@@ -3520,7 +3524,8 @@ g.V().order().by('name',desc).values('name')
 g.V().both().order().by('age') <1>
 ----
 
-<1> The "age" property is not <<by-step,productive>> for all vertices and therefore those values are filtered.
+<1> The "age" property is not <<by-step,productive>> for every vertex. Those vertices remain and sort under a `null`
+key.
 
 The `order()`-step allows the user to provide an arbitrary number of comparators for primary, secondary, etc. sorting.
 In the example below, the primary ordering is based on the outgoing created-edge count. The secondary ordering is
@@ -3560,13 +3565,33 @@ g.V().groupCount().by(inE().count()).order(local).by(keys, asc) <4>
 
 NOTE: The `values` and `keys` enums are from `Column` which is used to select "columns" from a `Map`, `Map.Entry`, or `Path`.
 
-If a property key does not exist, then it will be treated as `null` which will sort it first for `Order.asc` and last
-for `Order.desc`.
+For global `order()`, a missing property key becomes `null`. It sorts first for `Order.asc` and last for `Order.desc`.
 
 [gremlin-groovy,modern]
 ----
 g.V().order().by("age").elementMap()
 ----
+
+[NOTE, caption=YouTrackDB order semantics]
+====
+Global `order()` keeps a traverser when its `by()` modulator produces no value. This rule also covers a modulator that
+contains a filter. The step sorts that traverser under a `null` key. The key sorts first with `Order.asc` and last with
+`Order.desc`.
+
+`order(local)` keeps Apache TinkerPop behavior. It discards a traverser when its modulator produces no value. This
+filtering is the permanent default for local ordering.
+
+The `local()` wrapper does not change the scope of an enclosed order step. Therefore, `local(order().by(k))` follows
+the global retention rule. In contrast, `order(local).by(k)` follows the local filtering rule. This difference is
+intentional and permanent.
+
+`StandardOrderSemanticsStrategy` is opt in. Apply it with
+`g.withStrategies(StandardOrderSemanticsStrategy.instance())`. It restores Apache TinkerPop filtering for global
+`order()`.
+
+A custom comparator on a global `by()` modulator can receive a raw `null` value. Previously, an unproductive modulator
+removed the traverser before comparison.
+====
 
 NOTE: Prior to version 3.3.4, ordering was defined by `Order.incr` for ascending order and `Order.decr` for descending
 order. Those tokens were deprecated and eventually removed in 3.5.0.

@@ -754,6 +754,8 @@ Feature: Step - repeat()
       | result |
       | JAM |
       | JACK STRAW |
+      | Spencer_Davis |
+      | Spencer_Davis |
 
   # Test object-local tail runs per iteration in repeat with multiple iterations
   Scenario: g_VX250X_repeatXout_localXorder_byXperformancesX_tailX1XXX_timesX2X_valuesXnameX
@@ -777,6 +779,10 @@ Feature: Step - repeat()
       | JOHN BROWN |
       | SIMPLE TWIST OF FATE |
       | BABY BLUE |
+      | Bob_Dylan |
+      | Bob_Dylan |
+      | Bob_Dylan |
+      | Weir |
 
   # Test tail inside repeat can be followed by other range-based steps
   Scenario: g_VX3X_repeatXout_order_byXperformancesX_tailX3X_limitX1XX_timesX2X_valuesXnameX

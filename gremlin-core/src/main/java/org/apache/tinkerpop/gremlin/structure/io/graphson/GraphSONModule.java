@@ -50,6 +50,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.Halted
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.OptionsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.PartitionStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SeedStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.StandardOrderSemanticsStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.SubgraphStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.MatchAlgorithmStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ProfileStrategy;
@@ -204,6 +205,7 @@ abstract class GraphSONModule extends TinkerPopJacksonModule {
                             PartitionStrategy.class,
                             SubgraphStrategy.class,
                             SeedStrategy.class,
+                            StandardOrderSemanticsStrategy.class,
                             LazyBarrierStrategy.class,
                             MatchAlgorithmStrategy.class,
                             AdjacentToIncidentStrategy.class,
@@ -349,6 +351,7 @@ abstract class GraphSONModule extends TinkerPopJacksonModule {
                     PartitionStrategy.class,
                     SubgraphStrategy.class,
                     SeedStrategy.class,
+                    StandardOrderSemanticsStrategy.class,
                     LazyBarrierStrategy.class,
                     MatchAlgorithmStrategy.class,
                     AdjacentToIncidentStrategy.class,
@@ -468,6 +471,7 @@ abstract class GraphSONModule extends TinkerPopJacksonModule {
                             PartitionStrategy.class,
                             SubgraphStrategy.class,
                             SeedStrategy.class,
+                            StandardOrderSemanticsStrategy.class,
                             LazyBarrierStrategy.class,
                             MatchAlgorithmStrategy.class,
                             AdjacentToIncidentStrategy.class,
@@ -599,6 +603,7 @@ abstract class GraphSONModule extends TinkerPopJacksonModule {
                     PartitionStrategy.class,
                     SubgraphStrategy.class,
                     SeedStrategy.class,
+                    StandardOrderSemanticsStrategy.class,
                     LazyBarrierStrategy.class,
                     MatchAlgorithmStrategy.class,
                     AdjacentToIncidentStrategy.class,

@@ -135,7 +135,7 @@ Feature: Step - count()
     When iterated to list
     Then the result should be ordered
       | result |
-      | d[2].l |
+      | d[6].l |
 
   Scenario: g_E_sampleX1X_count
     Given the modern graph
@@ -168,7 +168,7 @@ Feature: Step - count()
     When iterated to list
     Then the result should be ordered
       | result |
-      | d[0].l |
+      | d[6].l |
 
   Scenario: g_V_group_byXlabelX_count
     Given the modern graph
